@@ -51,7 +51,7 @@ export default function Home() {
           <Link href="/dashboard" className="hover:text-stamp-live transition-colors">product</Link>
           <ThemeToggle />
           <a
-            href="https://github.com"
+            href="https://github.com/omm9846/verdict"
             className="border border-ink px-3 py-1.5 hover:bg-ink hover:text-paper transition-colors"
           >
             ★ Star
@@ -75,7 +75,7 @@ export default function Home() {
           </p>
           <div className="mt-9 flex flex-wrap gap-4">
             <a
-              href="https://github.com"
+              href="https://github.com/omm9846/verdict"
               className="bg-ink text-paper font-mono text-sm px-6 py-3.5 hover:bg-stamp-live transition-colors"
             >
               ★ Star on GitHub
@@ -222,7 +222,7 @@ export default function Home() {
             </p>
           </div>
           <div className="font-mono text-sm space-y-2 text-paper/70">
-            <div><a href="https://github.com" className="hover:text-paper">GitHub</a></div>
+            <div><a href="https://github.com/omm9846/verdict" className="hover:text-paper">GitHub</a></div>
             <div><a href="/dashboard" className="hover:text-paper">Product</a></div>
             <div><a href="mailto:hello@verdict.dev" className="hover:text-paper">hello@verdict.dev</a></div>
           </div>
