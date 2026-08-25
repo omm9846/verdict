@@ -15,9 +15,28 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Verdict — every email gets a verdict before it ships",
+  title: "Verdict — open-source Apollo alternative | verify every cold email before it ships",
   description:
-    "Open-source cold-outreach engine. Verdict probes every mailbox, classifies every domain, and refuses to send what will bounce.",
+    "Verdict is an open-source cold-outreach engine and Apollo/Hunter alternative. Email pattern discovery + SMTP verification gate holds bounce rate under 4%. Self-hosted or hosted.",
+  keywords: [
+    "apollo alternative", "hunter.io alternative", "instantly ai alternative",
+    "cold email verification", "email finder open source", "self-hosted cold outreach",
+    "smtp verification", "bounce rate reducer", "b2b lead generation", "clay alternative",
+  ],
+  openGraph: {
+    title: "Verdict — every email gets a verdict before it ships",
+    description:
+      "Open-source cold-outreach engine. Discovers emails from public-web evidence, verifies over SMTP, refuses what will bounce.",
+    url: "https://verdict-xi-olive.vercel.app",
+    siteName: "Verdict",
+    type: "website",
+    images: [{ url: "/logo-500.png", width: 500, height: 500 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Verdict — every email gets a verdict before it ships",
+    description: "Open-source Apollo alternative. Verify before send. Sub-4% bounce.",
+  },
 };
 
 const themeInit = `try{var t=localStorage.getItem('verdict-theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}`;
