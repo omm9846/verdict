@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export function WaitlistForm({ dark = false }: { dark?: boolean }) {
   const [email, setEmail] = useState("");
+  const [company, setCompany] = useState(""); // honeypot — hidden from humans
   const [state, setState] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -15,7 +16,7 @@ export function WaitlistForm({ dark = false }: { dark?: boolean }) {
       const r = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, company }),
       });
       const d = await r.json();
       if (r.ok) {
@@ -41,6 +42,17 @@ export function WaitlistForm({ dark = false }: { dark?: boolean }) {
 
   return (
     <form onSubmit={submit} className="w-full">
+      {/* honeypot — invisible to humans */}
+      <input
+        type="text"
+        name="company"
+        value={company}
+        onChange={(e) => setCompany(e.target.value)}
+        className="absolute opacity-0 pointer-events-none h-0 w-0"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
       <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="email"
