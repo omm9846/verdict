@@ -99,6 +99,7 @@ export function VerdictChecker() {
               display: "flex",
               alignItems: "center",
               gap: 14,
+              flexWrap: "wrap",
             }}
           >
             <span
@@ -113,10 +114,11 @@ export function VerdictChecker() {
             >
               {(friendlyLabel || "CHECKING").toUpperCase()}
             </span>
-            <span style={{ color: "#555" }}>{result.email}</span>
-            {result.detail && (
-              <span style={{ color: "#999", fontSize: 12 }}>({result.detail.slice(0, 40)})</span>
-            )}
+            {result?.verdict === "UNKNOWN" || result?.verdict === "CATCHALL" ? (
+              <span style={{ color: "#888", fontSize: 13 }}>
+                this mail server doesn't allow automated checks. the address is likely valid.
+              </span>
+            ) : null}
           </div>
         )}
       </form>

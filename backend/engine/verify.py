@@ -94,7 +94,8 @@ def verify(email):
     low = (detail or "").lower()
 
     if any(s in low for s in ("client host", "listed by", "service unavailable",
-                              "blocked using", "access denied")):
+                              "blocked using", "access denied",
+                              "unexpectedly closed", "connection reset")):
         return {"email": email, "verdict": "UNKNOWN", "mx": mx,
                 "detail": f"probe-ip blocked: {detail[:50]}"}
 
