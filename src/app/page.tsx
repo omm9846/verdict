@@ -2,6 +2,7 @@ import Link from "next/link";
 import { VerdictFeed } from "@/components/verdict-feed";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Faq from "@/components/faq";
+import { WaitlistForm } from "@/components/waitlist-form";
 
 const STEPS = [
   {
@@ -74,7 +75,7 @@ export default function Home() {
             send what will bounce. Your sender reputation never takes the damage.
             Open source, self-hosted, no contact database.
           </p>
-          <div className="mt-9 flex flex-wrap gap-4">
+          <div className="mt-9 flex flex-wrap gap-4 items-center">
             <a
               href="https://github.com/omm9846/verdict"
               className="bg-ink text-paper font-mono text-sm px-6 py-3.5 hover:bg-stamp-live transition-colors"
@@ -87,6 +88,12 @@ export default function Home() {
             >
               See the interface →
             </Link>
+          </div>
+          <div id="early-access" className="mt-8 max-w-md scroll-mt-24">
+            <p className="font-mono text-xs text-ink-faint mb-3">
+              hosted spots open soon — join the list:
+            </p>
+            <WaitlistForm />
           </div>
           <p className="mt-6 font-mono text-xs text-ink-faint">
             case study inside: 72 fund managers touched · 24 dead mailboxes caught pre-send · ~2% bounce
