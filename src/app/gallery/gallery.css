@@ -1,0 +1,92 @@
+/* PH gallery — 5-frame storytelling sequence, night ledger system */
+
+.frame {
+  width: 1270px;
+  height: 768px;
+  position: relative;
+  overflow: hidden;
+  background: oklch(0.155 0.01 270);
+}
+.frame .grain {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(oklch(0.21 0.012 268) 0.8px, transparent 0.8px),
+    radial-gradient(oklch(0.23 0.014 266) 0.8px, transparent 0.8px);
+  background-size: 28px 28px, 28px 28px;
+  background-position: 0 0, 14px 14px;
+}
+
+/* shared chrome */
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: oklch(0.62 0.008 85);
+}
+.pagenum {
+  position: absolute;
+  top: 48px;
+  right: 64px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: oklch(0.45 0.008 85);
+  letter-spacing: 0.2em;
+}
+.wordmark {
+  position: absolute;
+  bottom: 44px;
+  left: 64px;
+  font-family: var(--font-fraunces);
+  font-weight: 900;
+  font-size: 26px;
+  color: oklch(0.93 0.008 85);
+}
+.wordmark .dot { color: oklch(0.7 0.15 27); }
+
+.display-xl {
+  font-family: var(--font-fraunces);
+  font-weight: 900;
+  color: oklch(0.93 0.008 85);
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+}
+.mono-label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+/* straight verdict chips */
+.chip {
+  display: inline-block;
+  padding: 6px 20px;
+  border: 2.5px solid currentColor;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.18em;
+}
+.c-live { color: oklch(0.74 0.13 152); }
+.c-dead { color: oklch(0.68 0.15 27); }
+.c-catch { color: oklch(0.72 0.11 70); }
+
+/* feed rows */
+.frow {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid oklch(0.29 0.01 268);
+}
+.frow .addr { font-family: var(--font-mono); font-size: 23px; color: oklch(0.87 0.008 85); }
+.frow .fill { flex: 1; }
+.frow .line { border-bottom: 1px dotted oklch(0.34 0.01 268); margin-bottom: 8px; flex: 1; }
+
+/* thin accent rule */
+.accent-rule {
+  height: 4px;
+  width: 120px;
+  background: oklch(0.74 0.13 152);
+}
