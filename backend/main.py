@@ -1,10 +1,22 @@
 """Verdict API - verification gate + discovery for the dashboard."""
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from engine.verify import verify
 from engine import discovery
 
 app = FastAPI(title="Verdict Engine", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://verdict-xi-olive.vercel.app",
+        "https://verdict-video.vercel.app",
+        "http://localhost:3000",
+    ],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
 
 
 class VerifyRequest(BaseModel):
