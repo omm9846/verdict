@@ -41,6 +41,13 @@ export function VerdictChecker() {
     : result?.verdict === "DEAD" ? "#ff6b5e"
     : "#f0a850";
 
+  const friendlyLabel =
+    result?.verdict === "UNKNOWN"
+      ? "CAN'T AUTO-CHECK (server refused — try a different email or contact us)"
+      : result?.verdict === "CATCHALL"
+      ? "DOMAIN ACCEPTS ALL ADDRESSES (can't confirm individually)"
+      : (result?.verdict || "CHECKING").toUpperCase();
+
   return (
     <div style={{ width: "100%", maxWidth: 600 }}>
       <form onSubmit={check} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -104,7 +111,7 @@ export function VerdictChecker() {
                 whiteSpace: "nowrap",
               }}
             >
-              {(result.verdict || "UNKNOWN").toUpperCase()}
+              {(friendlyLabel || "CHECKING").toUpperCase()}
             </span>
             <span style={{ color: "#555" }}>{result.email}</span>
             {result.detail && (

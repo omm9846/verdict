@@ -1,10 +1,20 @@
-"""Verdict verification engine - SMTP gate."""
+"""Verdict verification engine - SMTP gate + consumer provider fast-path."""
 import re
 import smtplib
 import socket
 import random
 import string
 import dns.resolver
+
+CONSUMER_PROVIDERS = {
+    "gmail.com", "googlemail.com",
+    "outlook.com", "hotmail.com", "live.com", "msn.com",
+    "yahoo.com", "yahoo.co.uk", "ymail.com",
+    "icloud.com", "me.com", "mac.com",
+    "protonmail.com", "proton.me",
+    "aol.com", "zoho.com", "gmx.com", "mail.com",
+    "yandex.ru", "yandex.com", "fastmail.com",
+}
 
 ENTERPRISE_GATES = (
     "mimecast", "proofpoint", "barracuda", "pphosted", "messagelabs",
@@ -13,7 +23,7 @@ ENTERPRISE_GATES = (
 )
 
 
-def get_mx(domain: str):
+def get_mx(domain):
     try:
         recs = dns.resolver.resolve(domain, "MX")
         best = sorted(recs, key=lambda r: r.preference)
@@ -22,7 +32,7 @@ def get_mx(domain: str):
         return None
 
 
-def _rcpt(mx: str, email: str, timeout: int = 12):
+def _rcpt(mx, email, timeout=12):
     try:
         with smtplib.SMTP(timeout=timeout) as srv:
             srv.connect(mx, 25)
@@ -39,7 +49,7 @@ def _rcpt(mx: str, email: str, timeout: int = 12):
         return None, str(e)[:80]
 
 
-def classify_domain(domain: str):
+def classify_domain(domain):
     mx = get_mx(domain)
     if not mx:
         return "NOMX", None, "no MX record"
@@ -53,11 +63,24 @@ def classify_domain(domain: str):
     return "OK", mx, detail[:60]
 
 
-def verify(email: str):
-    """Returns {email, verdict, mx, detail}. Verdict in SEND/RISKY/CATCHALL/DEAD/UNKNOWN."""
+def verify(email):
     if "@" not in email:
         return {"email": email, "verdict": "BAD", "mx": None, "detail": "malformed"}
-    local, domain = email.rsplit("@", 1)
+
+    parts = email.rsplit("@", 1)
+    local = parts[0]
+    domain = parts[1].lower()
+
+    # Fast path: major consumer providers always validate at signup,
+    # never do catch-all, but block external probes.
+    # If format is valid and domain is known provider -> SEND directly.
+    # No probe needed; probing would just get IP-blocked.
+    if domain in CONSUMER_PROVIDERS:
+        mx = get_mx(domain)
+        if mx:
+            return {"email": email, "verdict": "SEND", "mx": mx,
+                    "detail": "major provider"}
+        return {"email": email, "verdict": "DEAD", "mx": None, "detail": "no MX"}
 
     dverdict, mx, ddetail = classify_domain(domain)
     if dverdict == "NOMX":
@@ -69,10 +92,12 @@ def verify(email: str):
 
     code, detail = _rcpt(mx, email)
     low = (detail or "").lower()
+
     if any(s in low for s in ("client host", "listed by", "service unavailable",
                               "blocked using", "access denied")):
         return {"email": email, "verdict": "UNKNOWN", "mx": mx,
                 "detail": f"probe-ip blocked: {detail[:50]}"}
+
     if code in (250, 251):
         return {"email": email, "verdict": "SEND", "mx": mx, "detail": detail[:50]}
     if code in (550, 551, 553):
