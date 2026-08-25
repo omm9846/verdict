@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { VerdictFeed } from "@/components/verdict-feed";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const STEPS = [
   {
@@ -45,9 +46,10 @@ export default function Home() {
           VERDICT<span className="text-stamp-dead">.</span>
         </span>
         <div className="flex items-center gap-6 font-mono text-sm">
-          <Link href="#how" className="hover:text-stamp-live transition-colors">how it works</Link>
-          <Link href="#benchmarks" className="hover:text-stamp-live transition-colors">benchmarks</Link>
+          <Link href="#how" className="hidden sm:inline hover:text-stamp-live transition-colors">how it works</Link>
+          <Link href="#benchmarks" className="hidden sm:inline hover:text-stamp-live transition-colors">benchmarks</Link>
           <Link href="/dashboard" className="hover:text-stamp-live transition-colors">product</Link>
+          <ThemeToggle />
           <a
             href="https://github.com"
             className="border border-ink px-3 py-1.5 hover:bg-ink hover:text-paper transition-colors"

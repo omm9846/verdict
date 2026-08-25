@@ -20,11 +20,16 @@ export const metadata: Metadata = {
     "Open-source cold-outreach engine. Verdict probes every mailbox, classifies every domain, and refuses to send what will bounce.",
 };
 
+const themeInit = `try{var t=localStorage.getItem('verdict-theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}`;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
       <body className={`${fraunces.variable} ${plexMono.variable} font-sans antialiased`}>
         {children}
       </body>

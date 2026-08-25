@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type Verdict = "LIVE" | "DEAD" | "RISKY" | "CATCHALL";
 
@@ -68,14 +69,18 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* main */}
-      <main className="flex-1 min-w-0 px-8 py-8 max-w-5xl">
+      {/* main — centered no matter what */}
+      <main className="flex-1 min-w-0 px-8 py-8">
+        <div className="mx-auto w-full max-w-4xl">
         {/* header */}
-        <div className="flex items-baseline justify-between mb-8">
-          <h1 className="font-display font-black text-3xl">Overview</h1>
-          <span className="font-mono text-xs text-ink-faint">
-            friday · wave window open
-          </span>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-baseline gap-4">
+            <h1 className="font-display font-black text-3xl">Overview</h1>
+            <span className="font-mono text-xs text-ink-faint">
+              friday · wave window open
+            </span>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* stats */}
@@ -157,6 +162,7 @@ export default function Dashboard() {
             </tbody>
           </table>
         </section>
+        </div>
       </main>
     </div>
   );

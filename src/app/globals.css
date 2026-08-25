@@ -16,6 +16,21 @@
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
+/* night ledger — same system, flipped */
+.dark {
+  --color-paper: oklch(0.16 0.01 270);
+  --color-paper-deep: oklch(0.19 0.012 269);
+  --color-card: oklch(0.21 0.011 268);
+  --color-ink: oklch(0.93 0.008 85);
+  --color-ink-soft: oklch(0.72 0.01 85);
+  --color-ink-faint: oklch(0.54 0.008 85);
+  --color-rule: oklch(0.34 0.01 268);
+  --color-stamp-live: oklch(0.74 0.13 152);
+  --color-stamp-dead: oklch(0.7 0.15 27);
+  --color-stamp-risky: oklch(0.75 0.11 70);
+  --color-stamp-check: oklch(0.7 0.09 255);
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);
@@ -25,6 +40,12 @@ body {
     radial-gradient(oklch(0.93 0.018 86) 0.8px, transparent 0.8px);
   background-size: 28px 28px, 28px 28px;
   background-position: 0 0, 14px 14px;
+}
+
+.dark body {
+  background-image:
+    radial-gradient(oklch(0.22 0.012 268) 0.8px, transparent 0.8px),
+    radial-gradient(oklch(0.24 0.014 266) 0.8px, transparent 0.8px);
 }
 
 /* ruled ledger line under headings */
@@ -73,3 +94,4 @@ body {
 .stamp-slam { animation: stamp-slam 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 ::selection { background: oklch(0.85 0.06 90); }
+.dark ::selection { background: oklch(0.4 0.05 90); }
