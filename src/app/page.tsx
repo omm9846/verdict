@@ -3,6 +3,7 @@ import { VerdictFeed } from "@/components/verdict-feed";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Faq from "@/components/faq";
 import { WaitlistForm } from "@/components/waitlist-form";
+import { VerdictChecker } from "@/components/verdict-checker";
 
 const STEPS = [
   {
@@ -89,11 +90,17 @@ export default function Home() {
               See the interface →
             </Link>
           </div>
-          <div id="early-access" className="mt-8 max-w-md scroll-mt-24">
-            <p className="font-mono text-xs text-ink-faint mb-3">
-              hosted spots open soon — join the list:
+          <div className="mt-10 max-w-2xl">
+            <p className="font-mono text-xs text-ink-faint mb-4 uppercase tracking-[0.2em]">
+              try it right now — free, no signup
             </p>
-            <WaitlistForm />
+            <VerdictChecker />
+            <div className="mt-8 max-w-md">
+              <p className="font-mono text-xs text-ink-faint mb-3">
+                want the full engine? join the waitlist:
+              </p>
+              <WaitlistForm />
+            </div>
           </div>
           <p className="mt-6 font-mono text-xs text-ink-faint">
             case study inside: 72 fund managers touched · 24 dead mailboxes caught pre-send · ~2% bounce
