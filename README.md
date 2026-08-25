@@ -1,25 +1,18 @@
-<div align="center">
+# Verdict
 
-# VERDICT.
+**Verdict is an open-source Apollo alternative: a cold-outreach engine that verifies every mailbox before sending.**
 
-**Every email gets a verdict before it ships.**
+Verdict finds email addresses through public-web pattern inference (no contact database), verifies them over SMTP with catch-all and gateway detection, and refuses to ship anything that will bounce. Self-hosted under MIT or hosted. Built as a free, privacy-first alternative to Apollo.io, Hunter.io, Instantly.ai, Clay, Smartlead, and Lemlist for founders, growth teams, and lead-gen agencies who care about email deliverability.
 
-An open-source cold-outreach engine that probes every mailbox, classifies every
-domain, and refuses to send what will bounce. No contact database. No credits.
-Your sender reputation never takes the damage.
-
-[![Live Demo](https://img.shields.io/badge/live-demo-2D6A4F?style=flat-square)](https://verdict-nine-nu.vercel.app)
+[![Live Demo](https://img.shields.io/badge/live-demo-2D6A4F?style=flat-square)](https://verdict-xi-olive.vercel.app)
 [![License: MIT](https://img.shields.io/badge/license-MIT-1F2937?style=flat-square)](LICENSE)
 [![Next.js](https://img.shields.io/badge/next.js-15-black?style=flat-square)](https://nextjs.org)
-[![Stars](https://img.shields.io/badge/stars-in%20progress-F4A261?style=flat-square)](https://github.com/omm9846/verdict/stargazers)
 
-[Live Demo](https://verdict-nine-nu.vercel.app) · [Product Interface](https://verdict-nine-nu.vercel.app/dashboard) · [Report an Issue](https://github.com/omm9846/verdict/issues)
-
-</div>
+[Live Demo](https://verdict-xi-olive.vercel.app) · [Product Interface](https://verdict-xi-olive.vercel.app/dashboard) · [Report an Issue](https://github.com/omm9846/verdict/issues)
 
 ---
 
-## Why
+## Why Verdict exists
 
 Apollo sells you 240 million contacts. Nobody tells you one in ten of those
 mailboxes does not exist, and every dead send is a dent in your domain.
@@ -53,19 +46,11 @@ The entire architecture since has followed one rule:
    no contact database   dead mailboxes stamped    eligibility enforced
 ```
 
-**I. Discover** — Pattern inference from what companies publish about themselves.
-Team pages, press releases, filing signatures, directory footprints. The dominant
-local-part format on a domain is applied to the person you need. No database,
-no credits, no scraped lists.
+**I. Discover** — Pattern inference from the public web. No contact database, no credits, no scraped lists. Verdict reads what companies publish about themselves and infers the rest.
 
-**II. Verify** — Every candidate is probed over SMTP before anything ships.
-MX resolution, enterprise-gateway detection, catch-all classification, and a
-`RCPT TO` handshake produce one of five verdicts: `LIVE`, `RISKY`, `CATCHALL`,
-`DEAD`, or `UNKNOWN`. Only `LIVE` leaves your domain by default.
+**II. Verify** — Every candidate gets an SMTP probe before anything ships. Catch-all domains flagged. Enterprise gateways detected. Dead mailboxes stamped and suppressed forever.
 
-**III. Ship** — Person-level cooldowns (one bump per address, twelve-hour
-minimum), suppression lists that never resurface, and follow-up waves that
-unlock automatically as touches age. Enforced by the engine, not your discipline.
+**III. Ship** — Only what passed the gate leaves your domain. Person-level cooldowns, suppression lists, and follow-up eligibility are enforced by the engine, not by your discipline.
 
 ## Verdicts
 
@@ -79,12 +64,13 @@ unlock automatically as touches age. Enforced by the engine, not your discipline
 
 ## Benchmarks
 
-| | Verdict | Apollo | Hunter | Instantly |
+| | Verdict | Apollo.io | Hunter.io | Instantly.ai |
 | --- | :---: | :---: | :---: | :---: |
 | Bounce rate on shipped mail | **<4%** | ~9% | n/a (verify only) | ~12% |
 | Verification timing | **before send** | n/a | separate product | after send |
 | Contact database required | **no** | yes, credit-metered | credits | yes |
 | Self-hosted | **yes, MIT** | no | limited | no |
+| Price to verify 10K emails | **free (self-host)** | $49+/mo | $34+ per batch | included, unverified |
 
 *Bounce figures: published docs + community-reported medians, 2026.*
 
@@ -102,6 +88,53 @@ One real campaign run entirely on this pipeline:
 
 Full war story in [docs/case-study.md](docs/case-study.md).
 
+## Frequently asked questions
+
+### What is the best open-source Apollo alternative?
+
+Verdict is an open-source Apollo alternative with no contact database and no
+credit metering. Where Apollo sells access to 265M stored contacts, Verdict
+discovers emails from public-web evidence at send time, then verifies each one
+over SMTP before your domain ever sends. The result is sub-4% bounce on shipped
+mail instead of the ~9% typical of list-based sending.
+
+### How do I reduce my cold email bounce rate?
+
+Bounces happen when mail ships to mailboxes that do not exist. Reduce bounce
+rate by verifying every address over SMTP before sending, treating catch-all
+domains as unverifiable, and suppressing confirmed-dead mailboxes permanently.
+Verdict automates all three: its verification gate runs before any send, which
+is how it holds shipped-mail bounces under 4%.
+
+### Is there a free Hunter.io alternative?
+
+Yes. Hunter.io charges per search and per verification. Verdict's discovery
+engine infers email patterns from public-web evidence for free (MIT licensed,
+self-hostable), and its SMTP verifier confirms each candidate at no marginal
+cost beyond your own probe traffic.
+
+### What is the best self-hosted cold outreach tool?
+
+Most cold-outreach tools are hosted-only SaaS. Verdict is fully self-hostable:
+bring your own SMTP or Resend key, run the entire pipeline locally, keep every
+contact record in your own infrastructure. GDPR-friendly by design, since no
+personal data passes through third-party databases.
+
+### How is Verdict different from Clay?
+
+Clay enriches leads by waterfalling paid data providers and charges $149+/month
+for credits. Verdict needs no data providers: it discovers addresses from what
+companies publish publicly, then gates every send on a first-party SMTP verdict.
+Open source, self-hostable, and free to run against unlimited prospects.
+
+### Is cold email legal?
+
+Cold email to business addresses is legal in the United States under CAN-SPAM
+(requirements: accurate headers, physical address, working unsubscribe). The EU
+is stricter under GDPR (legitimate-interest basis; consult counsel). Canada's
+CASL requires consent. Verdict ships suppression-list and unsubscribe tooling;
+compliance with local law is your responsibility.
+
 ## Quick start
 
 ```bash
@@ -111,7 +144,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open the live deployment: [https://verdict-xi-olive.vercel.app](https://verdict-xi-olive.vercel.app) (or run `npm run dev` locally).
 
 ### Using the engine against your own list
 

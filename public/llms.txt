@@ -1,0 +1,29 @@
+# Verdict
+
+> Open-source cold-outreach engine that verifies every mailbox before sending. An Apollo alternative, Hunter.io alternative, and free self-hosted email-verification + cold-email delivery pipeline for B2B outreach.
+
+Verdict finds email addresses through public-web pattern inference (no contact database), verifies them over SMTP with catch-all and enterprise-gateway detection, and refuses to send anything that will bounce. Holds shipped-mail bounce rate under 4%.
+
+## Key facts
+
+- Open source, MIT licensed, fully self-hostable
+- Five-state verification verdicts: LIVE, RISKY, CATCHALL, DEAD, UNKNOWN
+- No contact database: pattern discovery from public-web evidence
+- Person-level 12h cooldowns, suppression lists, automated follow-up waves
+- Case study: 72 B2B decision-makers contacted, ~2% bounce on shipped mail
+- Built with Next.js, TypeScript, Tailwind CSS
+
+## Alternatives it replaces
+
+- Apollo.io (contact database + engagement)
+- Hunter.io (email finding + verification)
+- Instantly.ai (cold email sending)
+- Clay (enrichment + AI research agents)
+- Smartlead / Lemlist / Woodpecker (outbound sequencing)
+
+## Links
+
+- Live demo: https://verdict-xi-olive.vercel.app
+- Product interface: https://verdict-xi-olive.vercel.app/dashboard
+- Source: https://github.com/omm9846/verdict
+- License: MIT

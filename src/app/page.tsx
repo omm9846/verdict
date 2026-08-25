@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VerdictFeed } from "@/components/verdict-feed";
 import { ThemeToggle } from "@/components/theme-toggle";
+import Faq from "@/components/faq";
 
 const STEPS = [
   {
