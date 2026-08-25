@@ -105,6 +105,11 @@ export default function Home() {
           <p className="mt-6 font-mono text-xs text-ink-faint">
             case study inside: 72 fund managers touched · 24 dead mailboxes caught pre-send · ~2% bounce
           </p>
+          <div className="mt-8">
+            <a href="https://www.producthunt.com/products/verdict-11?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-verdict-11" target="_blank" rel="noopener noreferrer">
+              <img alt="Verdict - Emails that never bounce. | Product Hunt" width={250} height={54} src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1231863&amp;theme=light&amp;t=1787659374392" />
+            </a>
+          </div>
         </div>
 
         <div className="bg-card border border-rule p-6 shadow-[6px_6px_0_0_var(--color-rule)] mt-4">
