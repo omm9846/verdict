@@ -1,0 +1,23 @@
+name: keep-warm
+
+# Render's free plan spins the engine down after 15 min idle (~50s cold start).
+# Ping /health so launch-day traffic never hits a sleeping dyno.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ping engine
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 \
+              https://verdict-engine-4g97.onrender.com/health) && \
+            [ "$code" = "200" ] && echo "engine awake ($code)" && exit 0
+            echo "attempt $i got '$code' — retrying"
+            sleep 20
+          done
+          echo "engine did not wake after 3 attempts"; exit 1

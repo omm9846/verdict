@@ -1,0 +1,100 @@
+[
+ {
+  "company": "Leonardo Group",
+  "domain": "leonardogroup.com",
+  "segment": "agency",
+  "live": []
+ },
+ {
+  "company": "SendLayer",
+  "domain": "sendlayer.com",
+  "segment": "email infra",
+  "live": []
+ },
+ {
+  "company": "ListKit",
+  "domain": "listkit.io",
+  "segment": "email tool",
+  "live": [
+   "hello@listkit.io"
+  ]
+ },
+ {
+  "company": "Snov.io",
+  "domain": "snov.io",
+  "segment": "outreach tool",
+  "live": []
+ },
+ {
+  "company": "Smartlead",
+  "domain": "smartlead.ai",
+  "segment": "outreach tool",
+  "live": []
+ },
+ {
+  "company": "LeadMagic",
+  "domain": "leadmagic.io",
+  "segment": "leadgen",
+  "live": []
+ },
+ {
+  "company": "Apollo Forms",
+  "domain": "apolloforms.com",
+  "segment": "leadgen",
+  "live": []
+ },
+ {
+  "company": "GrowthX",
+  "domain": "growthx.io",
+  "segment": "growth agency",
+  "live": []
+ },
+ {
+  "company": "Tribe Prospecting",
+  "domain": "tribeprospecting.com",
+  "segment": "agency",
+  "live": []
+ },
+ {
+  "company": "RevenueHolic",
+  "domain": "revenueholic.com",
+  "segment": "revops",
+  "live": []
+ },
+ {
+  "company": "SalesLounge",
+  "domain": "saleslounge.com",
+  "segment": "sales",
+  "live": []
+ },
+ {
+  "company": "Warmly",
+  "domain": "warmly.ai",
+  "segment": "ABM",
+  "live": []
+ },
+ {
+  "company": "Breeze CRM",
+  "domain": "breezecrm.com",
+  "segment": "CRM",
+  "live": []
+ },
+ {
+  "company": "Autopilot",
+  "domain": "autopilot.com",
+  "segment": "marketing",
+  "live": []
+ },
+ {
+  "company": "Compify",
+  "domain": "compify.com",
+  "segment": "sales",
+  "live": []
+ },
+ {
+  "company": "Persuva",
+  "domain": "persuva.com",
+  "segment": "sales",
+  "live": []
+ }
+]

@@ -1,0 +1,244 @@
+[
+ {
+  "firm": "Pythagoras Investments",
+  "domain": "pythagorasinvestments.com",
+  "icp": "hedge fund",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "Wincent Capital",
+  "domain": "wincent.io",
+  "icp": "hedge fund",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "Apollo Capital AU",
+  "domain": "apollo-capital.com.au",
+  "icp": "hedge fund",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "Solidum Capital",
+  "domain": "solidumcapital.io",
+  "icp": "hedge fund",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "Kbit",
+  "domain": "kbit.io",
+  "icp": "hedge fund",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "Lemvi",
+  "domain": "lemvi.ch",
+  "icp": "hedge fund",
+  "emails": [
+   "invest@lemvi.ch"
+  ],
+  "live": [
+   "invest@lemvi.ch"
+  ],
+  "probed": [
+   {
+    "email": "invest@lemvi.ch",
+    "verdict": "SEND",
+    "mx": "mta-gw.infomaniak.ch",
+    "detail": "2.1.5 Ok"
+   }
+  ]
+ },
+ {
+  "firm": "Tok-Edge",
+  "domain": "tokedge.com",
+  "icp": "hedge fund",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "SharpLink Gaming",
+  "domain": "sharplink.com",
+  "icp": "treasury",
+  "emails": [
+   "ir@sharplink.com",
+   "info@sharplink.com"
+  ],
+  "live": [
+   "ir@sharplink.com",
+   "info@sharplink.com"
+  ],
+  "probed": [
+   {
+    "email": "ir@sharplink.com",
+    "verdict": "SEND",
+    "mx": "aspmx.l.google.com",
+    "detail": "2.1.5 OK d9443c01a7336-2d704c74698si11641455ad.145"
+   },
+   {
+    "email": "info@sharplink.com",
+    "verdict": "SEND",
+    "mx": "aspmx.l.google.com",
+    "detail": "2.1.5 OK d9443c01a7336-2d704c0d00fsi11705215ad.83 "
+   }
+  ]
+ },
+ {
+  "firm": "MetaPlanet",
+  "domain": "metaplanet.com",
+  "icp": "treasury",
+  "emails": [
+   "info@metaplanet.com"
+  ],
+  "live": [],
+  "probed": [
+   {
+    "email": "info@metaplanet.com",
+    "verdict": "DEAD",
+    "mx": null,
+    "detail": "no MX record"
+   }
+  ]
+ },
+ {
+  "firm": "The Ether Machine",
+  "domain": "theethermachine.com",
+  "icp": "treasury",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "Capital B",
+  "domain": "cptlb.com",
+  "icp": "treasury",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "Bitcoin Treasury Corp",
+  "domain": "btctcorp.com",
+  "icp": "treasury",
+  "emails": [
+   "info@btctcorp.com",
+   "ejohnson@btctcorp.com",
+   "kthompson@btctcorp.com",
+   "hsim@btctcorp.com",
+   "kcrone@btctcorp.com",
+   "bevans@btctcorp.com"
+  ],
+  "live": [],
+  "probed": [
+   {
+    "email": "info@btctcorp.com",
+    "verdict": "UNKNOWN",
+    "mx": "mx1-us1.ppe-hosted.com",
+    "detail": "probe-IP blocked: 5.7.1 Service unavailable; client [43.25"
+   },
+   {
+    "email": "ejohnson@btctcorp.com",
+    "verdict": "UNKNOWN",
+    "mx": "mx1-us1.ppe-hosted.com",
+    "detail": "probe-IP blocked: 5.7.1 Service unavailable; client [43.25"
+   },
+   {
+    "email": "kthompson@btctcorp.com",
+    "verdict": "UNKNOWN",
+    "mx": "mx1-us1.ppe-hosted.com",
+    "detail": "probe-IP blocked: 5.7.1 Service unavailable; client [43.25"
+   },
+   {
+    "email": "hsim@btctcorp.com",
+    "verdict": "UNKNOWN",
+    "mx": "mx1-us1.ppe-hosted.com",
+    "detail": "probe-IP blocked: 5.7.1 Service unavailable; client [43.25"
+   },
+   {
+    "email": "kcrone@btctcorp.com",
+    "verdict": "UNKNOWN",
+    "mx": "mx1-us1.ppe-hosted.com",
+    "detail": "probe-IP blocked: 5.7.1 Service unavailable; client [43.25"
+   },
+   {
+    "email": "bevans@btctcorp.com",
+    "verdict": "UNKNOWN",
+    "mx": "mx1-us1.ppe-hosted.com",
+    "detail": "probe-IP blocked: 5.7.1 Service unavailable; client [43.25"
+   }
+  ]
+ },
+ {
+  "firm": "Phoenix Group",
+  "domain": "phoenixgroupuae.com",
+  "icp": "miner",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "LQWD Technologies",
+  "domain": "lqwdtech.com",
+  "icp": "miner",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "Bitcoin Well",
+  "domain": "bitcoinwell.com",
+  "icp": "miner",
+  "emails": [
+   "satoshi@bitcoinwell.com",
+   "hello@bitcoinwell.com",
+   "u003ehello@bitcoinwell.com"
+  ],
+  "live": [],
+  "probed": [
+   {
+    "email": "satoshi@bitcoinwell.com",
+    "verdict": "CATCHALL",
+    "mx": "aspmx.l.google.com",
+    "detail": "fake mailbox accepted"
+   },
+   {
+    "email": "hello@bitcoinwell.com",
+    "verdict": "CATCHALL",
+    "mx": "aspmx.l.google.com",
+    "detail": "fake mailbox accepted"
+   },
+   {
+    "email": "u003ehello@bitcoinwell.com",
+    "verdict": "CATCHALL",
+    "mx": "aspmx.l.google.com",
+    "detail": "fake mailbox accepted"
+   }
+  ]
+ },
+ {
+  "firm": "DMG Blockchain",
+  "domain": "dmgblockchain.com",
+  "icp": "miner",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ },
+ {
+  "firm": "Bitcoin Group SE",
+  "domain": "bitcoingroup.com",
+  "icp": "miner",
+  "emails": [],
+  "live": [],
+  "status": "no_public"
+ }
+]

@@ -12,10 +12,35 @@ type VerdictResult = {
   reason?: string;
 };
 
+const WAITLIST_API = "/api/waitlist";
+
 export function VerdictChecker() {
   const [email, setEmail] = useState("");
   const [result, setResult] = useState<VerdictResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [promptWaitlist, setPromptWaitlist] = useState(false);
+  const [wlEmail, setWlEmail] = useState("");
+  const [wlState, setWlState] = useState<"idle" | "loading" | "ok" | "error">("idle");
+  const [wlMsg, setWlMsg] = useState("");
+
+  async function joinWaitlist(e: React.FormEvent) {
+    e.preventDefault();
+    if (!wlEmail || wlState === "loading") return;
+    setWlState("loading");
+    try {
+      const r = await fetch(WAITLIST_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: wlEmail, source: "checker" }),
+      });
+      const d = await r.json();
+      if (r.ok) { setWlState("ok"); setWlMsg(d.message || "you're in."); }
+      else { setWlState("error"); setWlMsg(d.error || "try again."); }
+    } catch {
+      setWlState("error");
+      setWlMsg("network error. try again.");
+    }
+  }
 
   async function check(e: React.FormEvent) {
     e.preventDefault();
@@ -23,13 +48,17 @@ export function VerdictChecker() {
     setLoading(true);
     setResult(null);
     try {
-      const r = await fetch(`${API}/api/gate`, {
+      const r = await fetch(`${API}/api/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, person: "you", firm: "", domain: email.split("@")[1] }),
+        body: JSON.stringify({ email }),
       });
       const d = await r.json();
       setResult(d);
+      // Funnel latch: after a real verdict, prompt to join the waitlist
+      if (d?.verdict?.toUpperCase?.() === "SEND") {
+        setPromptWaitlist(true);
+      }
     } catch {
       setResult({ reason: "engine unreachable — try again" });
     }
@@ -122,6 +151,62 @@ export function VerdictChecker() {
           </div>
         )}
       </form>
+
+      {promptWaitlist && wlState !== "ok" && (
+        <div
+          style={{
+            marginTop: 16,
+            padding: "16px 20px",
+            border: "1px dashed #1a1a2e",
+            background: "#faf8f5",
+            fontFamily: "'IBM Plex Mono', monospace",
+          }}
+        >
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+            that address is live. want the full engine — batch checks, discovery, send-gate?
+          </div>
+          <form
+            onSubmit={joinWaitlist}
+            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+          >
+            <input
+              type="email"
+              required
+              value={wlEmail}
+              onChange={(e) => setWlEmail(e.target.value)}
+              placeholder={email || "your@email.com"}
+              style={{
+                flex: 1,
+                minWidth: 160,
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 14,
+                padding: "9px 14px",
+                border: "1px solid #ddd",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={wlState === "loading"}
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "9px 16px",
+                background: "#1a1a2e",
+                color: "#fff",
+                border: "none",
+                cursor: wlState === "loading" ? "wait" : "pointer",
+              }}
+            >
+              {wlState === "loading" ? "..." : "Join the waitlist →"}
+            </button>
+          </form>
+          {wlState === "error" && (
+            <div style={{ fontSize: 11, color: "#c0392b", marginTop: 6 }}>{wlMsg}</div>
+          )}
+        </div>
+      )}
+
       <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#999", marginTop: 8 }}>
         free · no signup · probes over SMTP, catch-all aware
       </p>

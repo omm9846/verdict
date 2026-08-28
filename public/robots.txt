@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://verdict-xi-olive.vercel.app/sitemap.xml

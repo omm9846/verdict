@@ -1,0 +1,84 @@
+============================================================
+POST 1 of 10
+============================================================
+I cold-emailed 72 fund managers last week.
+
+24 of their addresses were dead.
+
+My domain would've taken the hit if I hadn't verified every single one over SMTP first.
+
+So I built a gate that does it automatically. Open source.
+
+============================================================
+POST 2 of 10
+============================================================
+9% of cold emails bounce because nobody checks if the mailbox exists before hitting send.
+
+Everyone optimizes copy. Nobody verifies addresses.
+
+That's backwards.
+
+============================================================
+POST 3 of 10
+============================================================
+Built a pre-send SMTP gate that probes every mailbox across 16 mail servers before anything leaves your domain.
+
+Catch-all detection included. Dead addresses suppressed forever.
+
+============================================================
+POST 4 of 10
+============================================================
+Hot take: most cold email tools optimize for volume. The real unlock is refusal.
+
+If we can't confirm your recipient exists, we won't send.
+
+============================================================
+POST 5 of 10
+============================================================
+Email lists decay 25% per year.
+
+People abandon addresses. Companies die. Domains expire. Every dead address on your list teaches inbox providers to distrust you.
+
+============================================================
+POST 6 of 10
+============================================================
+Our verification engine classified 89 addresses across 25 companies.
+
+Only 40% of domains allow external probes. The rest? Enterprise gateways and catch-alls.
+
+Here's why that matters for your deliverability.
+
+============================================================
+POST 7 of 10
+============================================================
+Ran a real campaign through our open-source engine last week.
+
+72 fund managers. 24 dead mailboxes caught pre-send. 2% bounce on shipped mail.
+
+All numbers real. All verifiable.
+
+============================================================
+POST 8 of 10
+============================================================
+Stop building lead lists. Start building domain lists. Then verify every single address over SMTP before your domain fires.
+
+This is how bounce rate stays under 4%.
+
+============================================================
+POST 9 of 10
+============================================================
+We refuse to send more than anyone in this space.
+
+If our engine can't confirm your mailbox exists over SMTP, we won't ship.
+
+That no is why shipped-mail bounce stays under 4% while the industry average sits at 9-12%.
+
+============================================================
+POST 10 of 10
+============================================================
+Free email verifier live on our landing page.
+
+Paste any address, see if it exists. No signup. Probes over SMTP with catch-all detection.
+
+Try it.
+

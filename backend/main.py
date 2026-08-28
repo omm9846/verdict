@@ -10,10 +10,14 @@ app = FastAPI(title="Verdict Engine", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://tryverdict.org",
+        "https://www.tryverdict.org",
         "https://verdict-xi-olive.vercel.app",
         "https://verdict-video.vercel.app",
         "http://localhost:3000",
     ],
+    # Vercel preview deploys (verdict-*.vercel.app) — keeps staging working
+    allow_origin_regex=r"https://verdict-[a-z0-9-]+\.vercel\.app",
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type"],
 )
