@@ -52,6 +52,7 @@ HEADERS = {"User-Agent": UA, "Accept": "text/html,text/plain,*/*"}
 
 EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
 LINK_RE = re.compile(r"<a[^>]+href=[\"']([^\"']+)[\"'][^>]*>(.*?)</a>", re.I | re.S)
+MAILTO_RE = re.compile(r"mailto:([^\"'>?\s]+)", re.I)
 TAG_RE = re.compile(r"<[^>]+>")
 
 # Link text / href fragments that mean "this is the privacy policy"
@@ -151,21 +152,75 @@ def find_policy_urls(domain: str) -> list[str]:
     return urls[:6]
 
 
-def extract_contacts(text: str, locals_wanted: tuple[str, ...]) -> set[str]:
+def _clean_local(addr: str) -> str | None:
+    """Normalise one candidate address, or None if it is an extraction artifact.
+
+    Addresses scraped from HTML arrive damaged in predictable ways: a
+    percent-encoded space from a `mailto:%20foo@bar` href, or an inline tag
+    (`amazon.co<span>m</span>`) that splits the domain when tags are stripped.
+    Both produce an address that does not exist, which then double-confirms as
+    DEAD exactly as designed. Every such row is a false positive, so they are
+    rejected here rather than counted.
+    """
+    a = urllib.parse.unquote(addr).strip().strip(".,;:<>()[]\"'")
+    a = a.lower()
+    if a.count("@") != 1:
+        return None
+    local, dom = a.split("@")
+    if not local or not dom:
+        return None
+    # % survives urlencoding artifacts; whitespace means we spliced two things.
+    if "%" in a or any(c.isspace() for c in a):
+        return None
+    if local[0] in ".-" or local[-1] in ".-":
+        return None
+    if "." not in dom or dom[0] in ".-" or dom[-1] in ".-" or ".." in dom:
+        return None
+    tld = dom.rsplit(".", 1)[-1]
+    if len(tld) < 2 or not tld.isalpha():
+        return None
+    return a
+
+
+def extract_contacts(html: str, locals_wanted: tuple[str, ...]) -> set[str]:
     """Pull addresses whose local-part signals the wanted channel.
 
-    Any domain is accepted, not just the site's own: plenty of orgs route
-    privacy mail to outside counsel or a parent company, and a dead address
-    there is exactly as broken for the person trying to reach them.
+    mailto: hrefs are read first and are authoritative — they survive inline
+    markup that would corrupt the same address in the rendered text. Visible
+    text is then scanned as a fallback for addresses written out but not linked.
+
+    Any address domain is accepted, not just the site's own: plenty of orgs
+    route privacy mail to outside counsel or a parent company, and a dead
+    address there is exactly as broken for the person trying to reach them.
     """
     out: set[str] = set()
-    for m in EMAIL_RE.findall(text):
-        low = m.lower().strip(".")
-        if any(n in low for n in NOISE):
-            continue
-        local = low.split("@")[0]
-        if any(w in local for w in locals_wanted):
-            out.add(low)
+
+    def consider(raw: str):
+        a = _clean_local(raw)
+        if not a or any(n in a for n in NOISE):
+            return
+        if any(w in a.split("@")[0] for w in locals_wanted):
+            out.add(a)
+
+    for raw in MAILTO_RE.findall(html):
+        consider(raw)
+    # Two text passes. Replacing tags with a space keeps adjacent words apart;
+    # deleting them instead rejoins an address that markup split mid-domain
+    # (amazon.co<span>m</span>). Each pass produces artifacts the other does
+    # not, so take both and reconcile below.
+    for raw in EMAIL_RE.findall(strip_tags(html)):
+        consider(raw)
+    for raw in EMAIL_RE.findall(TAG_RE.sub("", html)):
+        consider(raw)
+
+    # Where one candidate's domain is a strict prefix of another's for the same
+    # local-part, the short one is a truncation. amazon.co / amazon.com is the
+    # real case; .co being a valid TLD means only this comparison catches it.
+    for a in sorted(out):
+        local, dom = a.split("@")
+        if any(b != a and b.split("@")[0] == local
+               and b.split("@")[1].startswith(dom) for b in out):
+            out.discard(a)
     return out
 
 
@@ -178,10 +233,10 @@ def read_security_txt(domain: str) -> set[str]:
             continue
         for line in body.splitlines():
             if line.lower().startswith("contact:") and "mailto:" in line.lower():
-                for m in EMAIL_RE.findall(line):
-                    low = m.lower()
-                    if not any(n in low for n in NOISE):
-                        out.add(low)
+                for m in MAILTO_RE.findall(line) or EMAIL_RE.findall(line):
+                    a = _clean_local(m)
+                    if a and not any(n in a for n in NOISE):
+                        out.add(a)
         if out:
             break
     return out
@@ -194,6 +249,15 @@ def probe(email: str, confirm_delay: float = 20.0) -> dict:
     finding. Only double-confirmed results get confirmed_dead=True, and a
     disagreement between the two probes downgrades the row to UNKNOWN.
     """
+    addr_domain = email.rsplit("@", 1)[-1]
+    if not get_mx(addr_domain):
+        # No MX at all usually means we mis-parsed the address out of the page,
+        # not that the org publishes a contact on a domain that cannot receive
+        # mail. Flag it for manual review; never count it as a finding.
+        return {"verdict": "EXTRACTION_SUSPECT", "mx": None,
+                "detail": f"no MX for {addr_domain}; likely mis-parsed",
+                "probed_at": now(), "confirmed_dead": False}
+
     first = vmod.verify(email)
     rec = {
         "verdict": first.get("verdict"),
@@ -237,7 +301,7 @@ def audit_domain(domain: str, include_inferred: bool = True) -> list[dict]:
         _, html = fetch(url)
         if not html:
             continue
-        for em in extract_contacts(strip_tags(html), PRIVACY_LOCALS):
+        for em in extract_contacts(html, PRIVACY_LOCALS):
             found.setdefault(em, ("published", url))
         time.sleep(0.3)
 
