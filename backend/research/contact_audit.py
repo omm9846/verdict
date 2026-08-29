@@ -213,14 +213,25 @@ def extract_contacts(html: str, locals_wanted: tuple[str, ...]) -> set[str]:
     for raw in EMAIL_RE.findall(TAG_RE.sub("", html)):
         consider(raw)
 
-    # Where one candidate's domain is a strict prefix of another's for the same
-    # local-part, the short one is a truncation. amazon.co / amazon.com is the
-    # real case; .co being a valid TLD means only this comparison catches it.
-    for a in sorted(out):
-        local, dom = a.split("@")
-        if any(b != a and b.split("@")[0] == local
-               and b.split("@")[1].startswith(dom) for b in out):
-            out.discard(a)
+    # Prefix pairs on the same local-part come from two opposite artifacts:
+    #   amazon.co   / amazon.com       markup split the domain -> keep longer
+    #   snov.io     / snov.io.want     text glued on after it  -> keep shorter
+    # Length cannot tell them apart, so ask DNS: the real domain resolves.
+    from engine.verify import resolve_mx
+    pairs = [(a, b) for a in out for b in out
+             if a != b and a.split("@")[0] == b.split("@")[0]
+             and b.split("@")[1].startswith(a.split("@")[1])]
+    for short, long in pairs:
+        if short not in out or long not in out:
+            continue
+        _, s_ok = resolve_mx(short.split("@")[1])
+        _, l_ok = resolve_mx(long.split("@")[1])
+        if l_ok == "ok" and s_ok != "ok":
+            out.discard(short)
+        elif s_ok == "ok" and l_ok != "ok":
+            out.discard(long)
+        else:
+            out.discard(short)  # both or neither resolve: markup-split case
     return out
 
 

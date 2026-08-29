@@ -109,6 +109,18 @@ def get_mx(domain):
     return resolve_mx(domain)[0]
 
 
+def _clean_detail(text, limit=140):
+    """Server responses arrive wrapped over several lines, often repeating the
+    status code on each. Collapse to one line so the value is safe to drop into
+    a table cell, a JSON field or an email body."""
+    t = " ".join(str(text or "").split())
+    m = re.match(r"(\d\.\d\.\d)\s", t)
+    if m:
+        # Servers repeat the status code on every wrapped line; keep the first.
+        t = m.group(1) + " " + re.sub(re.escape(m.group(1)) + r"\s*", "", t[len(m.group(1)):]).strip()
+    return t.strip()[:limit]
+
+
 def _rcpt(mx, email, timeout=12):
     try:
         with smtplib.SMTP(timeout=timeout) as srv:
@@ -260,15 +272,15 @@ def _verify_uncached(email):
                               "blocked using", "access denied",
                               "unexpectedly closed", "connection reset")):
         return {"email": email, "verdict": "UNKNOWN", "mx": mx,
-                "detail": f"probe-ip blocked: {detail[:50]}"}
+                "detail": f"probe-ip blocked: {_clean_detail(detail)}"}
 
     if code in (250, 251):
-        return {"email": email, "verdict": "SEND", "mx": mx, "detail": detail[:50]}
+        return {"email": email, "verdict": "SEND", "mx": mx, "detail": _clean_detail(detail)}
 
     if code in (550, 551, 553):
         kind = classify_rejection(detail)
         if kind == "recipient":
-            return {"email": email, "verdict": "DEAD", "mx": mx, "detail": detail[:50]}
+            return {"email": email, "verdict": "DEAD", "mx": mx, "detail": _clean_detail(detail)}
         if kind == "policy":
             # The server refused us, not the recipient. Saying DEAD here burns a
             # real contact permanently.
@@ -277,4 +289,4 @@ def _verify_uncached(email):
         return {"email": email, "verdict": "UNKNOWN", "mx": mx,
                 "detail": f"5xx, cause unclear: {detail[:44]}"}
 
-    return {"email": email, "verdict": "UNKNOWN", "mx": mx, "detail": str(detail)[:50]}
+    return {"email": email, "verdict": "UNKNOWN", "mx": mx, "detail": _clean_detail(detail)}
