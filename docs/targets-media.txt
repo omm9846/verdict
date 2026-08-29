@@ -1,0 +1,35 @@
+# Audience owners, not customers. Each of these already has our ICP reading
+# them; the pitch borrows that audience for the price of an exclusive.
+
+# --- tech press that runs industry-embarrassment stories
+theregister.com
+404media.co
+therecord.media
+arstechnica.com
+theverge.com
+techcrunch.com
+bleepingcomputer.com
+
+# --- deliverability insiders: tiny lists, but every reader is the ICP
+spamresource.com
+wordtothewise.com
+onlyinfluencers.com
+emailonacid.com
+litmus.com
+validity.com
+
+# --- developer / OSS curation with large lists
+console.dev
+tldr.tech
+changelog.com
+bytes.dev
+indiehackers.com
+lobste.rs
+
+# --- GTM / growth newsletters whose subscribers buy tools like this
+gtmfund.com
+demandcurve.com
+marketingexamples.com
+growthinreverse.com
+pavilion.com
+revgenius.com

@@ -21,7 +21,7 @@ Show HN: Verdict – open-source SMTP verification gate for cold email (MIT)
 **First comment — post immediately after submitting:**
 
 ```
-I burned a domain last year. 284 cold emails to crypto funds, 9% bounce rate,
+I burned a domain last year. 284 cold emails to crypto hedge funds, 9% bounce rate,
 sender reputation wrecked for weeks. The addresses came from a paid contact
 database that had no idea which of them still existed.
 
