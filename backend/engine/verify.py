@@ -153,6 +153,61 @@ def _classify_domain_uncached(domain):
     return "OK", mx, detail[:60]
 
 
+# RFC 3463 enhanced status codes. A 5xx on RCPT TO does not mean "no such
+# mailbox" — it means the server said no, and the reason matters enormously.
+# DEAD suppresses an address permanently, so it is reserved for the codes that
+# actually name the recipient as the problem.
+_ENHANCED_RE = re.compile(r"(?<![0-9.])([245])\.([0-9]{1,3})\.([0-9]{1,3})(?![0-9.])")
+
+# Recipient is the problem: the mailbox does not exist or cannot be delivered to.
+_RECIPIENT_STATUS = {(1, 1), (1, 2), (1, 3), (1, 6), (2, 1)}
+# The server is refusing us, or cannot answer. The mailbox may be perfectly fine.
+#   1.4 ambiguous  2.2 mailbox full (it exists!)  3.x system  4.x network
+#   5.x protocol   6.x content     7.x policy / authorisation
+_POLICY_CLASS = {3, 4, 5, 6, 7}
+
+_RECIPIENT_PHRASES = (
+    "user unknown", "no such user", "unknown user", "recipient not found",
+    "does not exist", "doesn't exist", "no mailbox", "mailbox unavailable",
+    "invalid recipient", "recipient address rejected", "address rejected",
+    "unknown recipient", "no such recipient", "user not found",
+    "account that you tried to reach does not exist",
+)
+_POLICY_PHRASES = (
+    "policy", "spam", "blocked", "blacklist", "denied", "not authorized",
+    "not authorised", "rejected due to", "greylist", "rate limit",
+    "unable to talk", "bad neighbor", "temporarily", "try again",
+    "authentication", "relay", "ambiguous", "mailbox full", "over quota",
+    "unrouteable", "unroutable", "host lookup failed", "no route",
+)
+
+
+def classify_rejection(detail):
+    """Why did the server say no? Returns "recipient", "policy" or "unclear".
+
+    Enhanced status code wins when present — it is machine-readable and
+    unambiguous. Otherwise fall back to the human text, and when neither is
+    conclusive say so rather than guessing, because guessing wrong in the
+    DEAD direction is unrecoverable.
+    """
+    text = (detail or "")
+    low = text.lower()
+
+    m = _ENHANCED_RE.search(text)
+    if m:
+        subject, sub = int(m.group(2)), int(m.group(3))
+        if (subject, sub) in _RECIPIENT_STATUS:
+            return "recipient"
+        if subject in _POLICY_CLASS or (subject, sub) == (1, 4) or (subject, sub) == (2, 2):
+            return "policy"
+
+    if any(p in low for p in _RECIPIENT_PHRASES):
+        return "recipient"
+    if any(p in low for p in _POLICY_PHRASES):
+        return "policy"
+    return "unclear"
+
+
 def verify(email):
     key = email.strip().lower()
     cached = _cache_get(_email_cache, key, _EMAIL_TTL)
@@ -209,6 +264,17 @@ def _verify_uncached(email):
 
     if code in (250, 251):
         return {"email": email, "verdict": "SEND", "mx": mx, "detail": detail[:50]}
+
     if code in (550, 551, 553):
-        return {"email": email, "verdict": "DEAD", "mx": mx, "detail": detail[:50]}
+        kind = classify_rejection(detail)
+        if kind == "recipient":
+            return {"email": email, "verdict": "DEAD", "mx": mx, "detail": detail[:50]}
+        if kind == "policy":
+            # The server refused us, not the recipient. Saying DEAD here burns a
+            # real contact permanently.
+            return {"email": email, "verdict": "UNKNOWN", "mx": mx,
+                    "detail": f"refused our probe, not the mailbox: {detail[:44]}"}
+        return {"email": email, "verdict": "UNKNOWN", "mx": mx,
+                "detail": f"5xx, cause unclear: {detail[:44]}"}
+
     return {"email": email, "verdict": "UNKNOWN", "mx": mx, "detail": str(detail)[:50]}
