@@ -152,6 +152,37 @@ def find_policy_urls(domain: str) -> list[str]:
     return urls[:6]
 
 
+# Role words that appear inside spliced local-parts. Page text runs straight
+# into the address — "...serving department" + "data-privacy@" becomes
+# departmentdata-privacy@, "New York 10013" + "privacy@" becomes
+# 10013privacy@. The domain is real, so the no-MX guard cannot catch these,
+# and a nonexistent address double-confirms as DEAD exactly as designed.
+_ROLE_WORDS = ("privacy", "contact", "support", "info", "press", "team",
+               "hello", "sales", "help", "legal", "dpo", "abuse", "security",
+               "compliance", "gdpr", "office", "admin", "media")
+
+
+def _spliced_role(local: str) -> bool:
+    """True when the local-part looks like page text run into a role address."""
+    if local[0].isdigit():
+        return True
+    for w in _ROLE_WORDS:
+        if not local.endswith(w) or local == w:
+            continue
+        prefix = local[: -len(w)]
+        # A real address separates the prefix: john.privacy@, eu-privacy@.
+        # A splice does not: departmentdata-privacy@ ends with "data-privacy"
+        # but the token before it is glued on.
+        if prefix and prefix[-1] in "._-":
+            token = prefix.rstrip("._-").split(".")[-1].split("-")[-1].split("_")[-1]
+            # A plausible qualifier is short and word-like: eu, us, data, dp.
+            if token.isalpha() and len(token) <= 8:
+                continue
+            return True
+        return True
+    return False
+
+
 def _clean_local(addr: str) -> str | None:
     """Normalise one candidate address, or None if it is an extraction artifact.
 
@@ -178,6 +209,8 @@ def _clean_local(addr: str) -> str | None:
         return None
     tld = dom.rsplit(".", 1)[-1]
     if len(tld) < 2 or not tld.isalpha():
+        return None
+    if _spliced_role(local):
         return None
     return a
 
