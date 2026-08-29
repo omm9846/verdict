@@ -1,307 +1,118 @@
-# Hand-written pitches, one per outlet
+# Media pitches
 
-The facts are identical everywhere. The reason to care is not, so nothing here
-is a mail-merge of anything else.
-
-**Before you send any of these:**
-
-1. Notify all 80 companies first, with a stated deadline. A story where the
-   subjects were told a week ago is reportable; one where they were not is a
-   hit job, and an editor will spot the difference immediately.
-2. Send from `hello@tryverdict.org`, one at a time, never bcc.
-3. Offer the exclusive to **one outlet at a time**, top of the list down, with
-   48 hours to respond before you move on. An exclusive offered to twenty
-   people is not an exclusive, and editors talk to each other.
-4. Check the pack in `docs/media/` for that outlet first — send to a verified
-   live address, and where there is none, find a byline on the beat instead.
-
-The order below is the order to work down.
+> **Correction, and why this file was rewritten.**
+> An earlier version of this file claimed that verification vendors had dead
+> mailboxes "on their own published addresses". That was wrong. Of 137 dead
+> addresses found across 80 email companies, **136 were front-desk addresses
+> we guessed** (`hello@`, `sales@`, `support@`) — not addresses those
+> companies ever published. Exactly one was genuinely published.
+> Four datasets, 571 companies, produced one real dead published address. The
+> finding does not exist, and nothing built on it should ever be sent.
+>
+> What follows uses only what survived checking.
 
 ---
 
-## 1. The Register — `theregister.com`
+## What is actually true
 
-The best fit by a distance. This is their exact genre: technically-grounded
-industry embarrassment, reported straight, with the humour left to the reader.
+**1. Domain authentication survey — Tranco top 1,200, August 2026.**
+Sample restricted to the 998 domains that accept mail, since sender
+authentication on a parked domain means nothing.
+
+| finding | count | share |
+| --- | ---: | ---: |
+| Spoofable — no DMARC, or `p=none` | 319 | **32.0%** |
+| ...no DMARC record at all | 176 | 17.6% |
+| ...DMARC present but `p=none` | 143 | 14.3% |
+| Enforcing (`quarantine` or `reject`) | 679 | 68.0% |
+| No SPF record | 252 | 25.3% |
+| No DKIM key on known selectors | 359 | 36.0% |
+
+Four domains publish **two SPF records**, which is a permanent error — the
+record fails entirely: `warnerbros.com`, `indiatimes.com`, `olx.com.br`,
+`hichina.com`. This is the only named finding in the set, and it is real:
+published by them, verifiably broken. Naming them in print needs a
+notification period first.
+
+**2. Verification is largely impossible from a host.**
+Outbound port 25 is blocked by every major cloud provider. A hosted verifier
+cannot open the connection that would confirm a mailbox, so it infers and
+reports the result in the vocabulary of a probe.
+
+**3. Most corporate addresses cannot be verified by anyone.**
+Of 158 published contact addresses at 131 large companies: 96 behind
+enterprise gateways, 59 refused the probe, 14 catch-all, **3 verifiable**.
+Separately, 61 of 124 mid-cap brands run catch-all domains, where no verifier
+can determine anything about any individual address.
+
+**4. The engine found four classes of false-positive in itself**, each
+producing a confident wrong answer, all documented in the repo.
+
+---
+
+## Ars Technica — `news@arstechnica.com` — send first
+
+Verified live. Six other addresses on that domain bounce, so do not guess.
 
 ```
-Subject: Firms that sell mailbox verification can't verify their own mailboxes
+Subject: A third of the top 1,000 domains can still be spoofed
 
 Hi,
 
-I maintain an open-source SMTP verification engine. I pointed it at 80
-companies whose business is email — outreach platforms, contact-data vendors,
-deliverability tools — and probed the contact addresses they publish on their
-own websites.
+I maintain an open-source email verification engine. In building it I ran a
+DNS survey over the Tranco top 1,200, and the result seems worth reporting
+plainly.
 
-31 of the 80 have at least one address that hard-bounces.
+Of the 998 that accept mail, 319 — 32% — publish no usable DMARC policy. 176
+have no DMARC record at all; another 143 have one set to p=none, which is
+monitoring only and instructs receivers to do nothing. A quarter publish no
+SPF record. Four publish two SPF records, which is a permanent error that
+disables the record entirely, including warnerbros.com and indiatimes.com.
 
-Five of those sell mailbox verification for a living: kickbox.com,
-verifalia.com, neverbounce.com, millionverifier.com and emailhippo.com.
-Kickbox and Verifalia each returned 550 5.1.1 on six of their own published
-addresses.
+DMARC is the record that decides whether a forged message claiming to be a
+domain gets rejected. Without it, SPF and DKIM are documentation nobody is
+obliged to act on.
 
-A further 32 run catch-all domains, which accept any address at all — I
-confirmed it with a random 22-character mailbox I made up on the spot. On
-those domains no verifier can confirm any individual address, including the
-verifier the company is selling you.
+The second half is why I was looking. Confirming that a mailbox exists needs
+an SMTP conversation on port 25, and every major cloud provider blocks
+outbound port 25 to suppress spam — AWS, GCP, Azure, Vercel, Render, Fly,
+Heroku. A hosted verifier physically cannot open that connection. It can
+infer, and it reports the inference using the language of a probe: "valid",
+"deliverable", "verified".
 
-Method: two independent SMTP probes at least 20 seconds apart, both required
-to return a hard recipient-level rejection. Catch-all domains, enterprise
-gateways and anything that refused the probe are excluded rather than counted
-— the interesting number is the one that survives being conservative. Raw
-server responses and timestamps for every result.
+I found that the way you would want someone to: I deployed my own engine to
+Render and it ran for three days before I noticed every corporate address
+returned UNKNOWN and only Gmail addresses appeared to work, because those hit
+a fast path that never probed anything. The hosted deployment had never
+verified a mailbox. It just looked like it had.
 
-The engine is MIT licensed, so you or anyone else can reproduce the whole
-thing: https://github.com/omm9846/verdict
+There is a harder limit underneath. Catch-all domains accept every address,
+including ones that have never existed — I confirm it with a random
+22-character local part. On those domains no verifier can determine anything.
+61 of 124 mid-size companies I checked are catch-all. At the large end it is
+worse for a different reason: of 158 published contact addresses at 131 large
+companies, 96 sit behind enterprise gateways and 59 refuse probes outright.
+Three were verifiable.
 
-Everyone named has been contacted and given a week to fix it or tell me I'm
-wrong.
-
-Full dataset and raw SMTP transcripts are yours if useful. Happy to make it
-exclusive — nobody else has the data.
-
-Om Soni
-hello@tryverdict.org
-```
-
----
-
-## 2. 404 Media — `404media.co`
-
-Reader-owned, allergic to PR, drawn to "the industry does not work the way it
-claims". Lead with the contradiction, not the tooling.
-
-```
-Subject: The email-verification industry can't verify its own email
-
-Hi,
-
-An entire product category exists to tell you whether an email address is
-real. I tested whether those companies' own addresses are real.
-
-I run an open-source SMTP verification engine. Pointed at 80 companies that
-sell email tooling, it found 31 with at least one hard-bouncing address on
-their own domain. Five of them sell mailbox verification as the product:
-Kickbox, Verifalia, NeverBounce, MillionVerifier and Email Hippo. Kickbox and
-Verifalia each failed on six of their own published addresses.
-
-The part I find more interesting: 32 of the 80 run catch-all domains, which
-accept literally any address. I confirmed it by sending to a random
-22-character mailbox that has never existed. On a catch-all domain no
-verification product can tell you anything at all — which means a chunk of
-this industry is selling a check that cannot return a meaningful answer for a
-large share of the internet, and is not saying so.
-
-Everything is reproducible. The engine is MIT, the method is two independent
-probes 20 seconds apart with catch-alls and blocked probes excluded rather
-than counted, and I kept the raw server response for every result:
-https://github.com/omm9846/verdict
-
-All 80 were contacted first and given a week to respond.
-
-Data is yours, exclusively if you want it.
-
-Om Soni
-hello@tryverdict.org
-```
-
----
-
-## 3. Spam Resource (Al Iverson) — `spamresource.com`
-
-A deliverability practitioner writing for practitioners. Do not explain what a
-catch-all is; he has forgotten more about this than the rest of the list knows.
-Peer to peer, method first.
-
-```
-Subject: Probed 80 email vendors' own contact addresses — 31 have hard bounces
-
-Hi Al,
-
-Long-time reader. I built an open-source SMTP verification engine and used it
-on a question I hadn't seen answered: do the companies selling email tooling
-keep their own published contact addresses alive?
-
-80 companies — ESPs, outreach platforms, contact data, verification vendors.
-31 have at least one address returning a hard recipient rejection. Five of
-those are verification vendors: Kickbox, Verifalia, NeverBounce,
-MillionVerifier, Email Hippo. Six failing addresses each at Kickbox and
-Verifalia.
-
-32 are catch-all, confirmed against a random 22-character local part.
-
-On method, since you'll ask: RCPT TO probe, two independent connections at
-least 20s apart, both required to return 5xx. I classify with the RFC 3463
-enhanced status code rather than the reply code — only 5.1.1/5.1.2/5.1.3/
-5.1.6/5.2.1 count as recipient-unknown. 5.7.x is policy, 5.1.4 is ambiguous
-and 5.2.2 actually proves the mailbox exists. Catch-alls, enterprise gateways
-and probes refused at our IP are excluded rather than counted as dead.
-
-I found that classification the hard way: my first pass called Apple, doi.org
-and ntp.org "dead" off 5.7.1 and 5.3.0 responses. Fixing that dropped 31 false
-positives out of 122.
-
-MIT, fully reproducible: https://github.com/omm9846/verdict
-
-Everyone named has been notified with a deadline. Happy to send the full
-dataset with raw transcripts if it's useful to you — no expectation either
-way, I mostly thought you'd find the classification problem interesting.
-
-Om Soni
-hello@tryverdict.org
-```
-
----
-
-## 4. Word to the Wise (Laura Atkins) — `wordtothewise.com`
-
-Same peer register as above, but her interest runs to what the data says about
-industry practice rather than the gotcha. Lead with the catch-all finding.
-
-```
-Subject: 32 of 80 email vendors run catch-all domains — unverifiable by anyone
-
-Hi Laura,
-
-I built an open-source SMTP verification engine and pointed it at 80 companies
-that sell email tooling, to see what their own contact surfaces look like
-under a real probe.
-
-The headline most people would take is that 31 have at least one hard-bouncing
-published address, five of them verification vendors. The finding I think
-actually matters is different: 32 of the 80 run catch-all domains. Confirmed
-against a random 22-character local part that has never existed.
-
-Which means for a large share of this industry, no verification product —
-theirs, mine, anyone's — can return a meaningful per-mailbox answer, and I
-don't see that limitation stated anywhere in how these tools are sold. My own
-tool reports CATCHALL and refuses to guess, and I'd argue that honesty is the
-only defensible position, but it is clearly not the market norm.
-
-Method: two independent RCPT TO probes 20s apart, both must return 5xx,
-classified on the RFC 3463 enhanced status rather than the reply code.
-Gateways, catch-alls and probes refused at our IP are excluded rather than
-counted. MIT and reproducible: https://github.com/omm9846/verdict
-
-All 80 notified with a deadline before anything publishes.
-
-Full dataset available if you want it.
-
-Om Soni
-hello@tryverdict.org
-```
-
----
-
-## 5. Console.dev — `console.dev`
-
-They curate developer tools for a large list. They do not want a scandal; they
-want a good tool with a clear reason to exist. Lead with the tool, use the
-finding as evidence it works.
-
-```
-Subject: Verdict — MIT SMTP verification gate (and what it found)
-
-Hi,
-
-Submitting Verdict for consideration: an open-source SMTP verification gate
-for cold outreach. MIT, self-hosted, no contact database.
-
-The design constraint is the interesting part. Every cloud host blocks
-outbound port 25 — Render, Vercel, AWS, GCP, Azure, Fly, Heroku — so a hosted
-mailbox verifier cannot actually probe anything. Most of the category quietly
-infers and presents it as verification. Verdict splits it honestly: a DNS tier
-that runs anywhere (SPF/DKIM/DMARC/MX, typosquat and burner detection, free at
-tryverdict.org/audit), and the real SMTP gate that runs on your own machine —
-which also means your contact list is never uploaded anywhere.
-
-As a test, I ran it against 80 companies that sell email tooling. 31 have a
-hard-bouncing address on their own domain, five of them verification vendors.
-Running it also found three false-DEAD bugs in my own classifier, all written
-up in the repo, which I'd argue is the better recommendation.
+I should say plainly that I sell a product in this space, which is why
+everything above is reproducible rather than asserted. The engine is MIT, the
+survey is pure DNS and reruns in minutes, and there is a free checker at
+tryverdict.org/audit that grades any domain and tells you when it cannot see
+something instead of guessing:
 
 https://github.com/omm9846/verdict
 
-Om Soni
-hello@tryverdict.org
-```
+One more thing that belongs in any writeup: pointing the engine at 1,200
+domains found four separate bugs in my own classifier, each producing a
+confident false "dead" verdict. A DNS timeout read as "no mail server". Any
+5xx read as "no such mailbox", when 5.7.1 is policy and 5.2.2 — mailbox full
+— proves the opposite. Addresses mangled during HTML scraping. And guessed
+front-desk addresses counted as though they had been published, which
+invalidated an entire earlier dataset of mine before I caught it. False
+negatives in this field are invisible and permanent, because a "dead" verdict
+suppresses an address for good.
 
----
-
-## 6. Changelog — `changelog.com`
-
-Podcast and newsletter about open source. The angle is the engineering story:
-the bugs, not the vendors.
-
-```
-Subject: What auditing 1,200 domains taught me about my own verifier
-
-Hi,
-
-I built an open-source SMTP verification engine, then pointed it at the Tranco
-top 1,200 to answer a research question. It answered a different one: it found
-three bugs in itself, all producing the same failure — a confident false DEAD,
-which for a verifier is the one error you cannot make, because DEAD suppresses
-an address permanently.
-
-1. get_mx() caught every exception and returned None, so a DNS timeout was
-   indistinguishable from "no mail server". 7 of 12 sampled "no MX" domains had
-   perfectly good MX records — berkeley.edu and theverge.com among them.
-
-2. Any 550/551/553 was read as "no such mailbox". But 5.7.1 is policy, 5.1.4 is
-   ambiguous, 5.3.0 is a system fault and 5.2.2 — mailbox full — proves the
-   mailbox exists. Reading the RFC 3463 enhanced status instead dropped 31
-   false positives out of 122.
-
-3. Addresses scraped from HTML arrive damaged in predictable ways:
-   %20privacy@vimeo.com from a mailto href, privacy@amazon.co from
-   amazon.co<span>m</span>. Each one double-confirmed as DEAD exactly as
-   designed, because a mangled address really is unreachable.
-
-There's a product around it — MIT, self-hosted, and it has to be, because every
-cloud host blocks outbound port 25 so a hosted verifier physically cannot probe
-a mailbox. But the bugs are the interesting part.
-
-https://github.com/omm9846/verdict
-
-Om Soni
-hello@tryverdict.org
-```
-
----
-
-## 7. GTM / growth newsletters — GTMfund, Demand Curve, RevGenius, Marketing Examples
-
-Their readers do not care about RFC 3463. They care that the list they paid for
-is rotting. One template, personalise the first line per newsletter.
-
-```
-Subject: Data for you: 31 of 80 email vendors have dead mailboxes on their own domain
-
-Hi [name],
-
-[One specific line about a recent issue of theirs — this matters more than
-anything else in the email. Skip it and this reads as a blast.]
-
-I have some original data your readers might like, and it is yours free.
-
-I run an open-source SMTP verification engine. I pointed it at 80 companies
-selling email tooling — Apollo, Hunter, Instantly, Clay, Snov, the verification
-vendors — and probed the contact addresses on their own sites.
-
-- 31 of 80 have at least one address that hard-bounces
-- 5 of those sell mailbox verification: Kickbox, Verifalia, NeverBounce,
-  MillionVerifier, Email Hippo
-- 32 run catch-all domains, where no verifier can confirm any address at all
-
-The practical takeaway for your readers is the third one. If a prospect's
-domain is catch-all, every verification tool will mark those addresses
-"valid", and you will find out otherwise from your bounce rate. That is not a
-vendor problem, it is a physics problem, and almost nobody says it out loud.
-
-Full data, per-company breakdown and raw server responses are yours — no link
-required, no strings. Use it however you like.
+Full data, method and raw records available. Yours exclusively if useful.
 
 Om Soni
 hello@tryverdict.org
@@ -310,15 +121,55 @@ https://tryverdict.org
 
 ---
 
-## Follow-up (once, after 4 days, then stop)
+## The Register — `editorial@theregister.com` — second
+
+`tips@theregister.com` is dead; use `editorial@`. Same facts, shorter, with
+the joke left for them to make.
 
 ```
-Subject: Re: [original subject]
+Subject: A third of the world's biggest domains can be spoofed. Nobody can verify the rest.
 
-Hi — following up once and then I'll leave it.
+Hi,
 
-The dataset is still unpublished if you want first look. If it's not for you,
-no problem at all, and I won't chase it again.
+Two findings from an open-source email verification engine, both reproducible.
 
-Om
+First: of the top 1,200 domains, 998 accept mail, and 319 of those — 32% —
+have no usable DMARC policy. 176 have no DMARC at all. Another 143 have
+p=none, which tells receiving servers to do precisely nothing. Four publish
+two SPF records, a permanent error that disables SPF entirely; warnerbros.com
+is one.
+
+Second, and the reason I was looking: hosted mailbox verification cannot
+work. Confirming a mailbox requires SMTP on port 25, and every major cloud
+blocks outbound 25. So the hosted products infer and call it verification. I
+know because I built one, deployed it to Render, and it ran three days
+without verifying anything while appearing to work fine.
+
+Then there are catch-all domains, which accept any address including invented
+ones — 61 of 124 mid-size companies I checked. No verifier can say anything
+about those, mine included.
+
+I sell a product in this space, so none of it is asserted: MIT licensed,
+DNS-only survey, reruns in minutes, free checker at tryverdict.org/audit.
+
+https://github.com/omm9846/verdict
+
+Full data yours if useful.
+
+Om Soni
+hello@tryverdict.org
 ```
+
+---
+
+## Rules
+
+1. **One outlet at a time**, 48 hours each. An exclusive offered twice is not
+   one.
+2. **Disclose the conflict in the pitch itself.** You sell a competing
+   product. Stated up front it reads as expertise; discovered later it reads
+   as an axe.
+3. **Percentages, not names** — except the four broken-SPF domains, and those
+   only after they have been told.
+4. Send from `hello@tryverdict.org`, one at a time, never bcc.
+5. **Never re-add a dead-mailbox claim.** It did not survive checking.
