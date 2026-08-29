@@ -158,7 +158,8 @@ def main():
         sender = os.environ.get("SMTP_FROM", "Om Soni <hello@tryverdict.org>")
 
     print(f"{'DRY RUN' if not a.send else 'SENDING'} — {len(drafts)} message(s)")
-    print(f"from {sender} via {host}:{port}\n")
+    route = "Resend API" if a.via == "resend" else f"{host}:{port}"
+    print(f"from {sender} via {route}\n")
 
     checked = []
     for d in drafts:
