@@ -60,13 +60,53 @@ def _cache_put(store, key, value):
         store[key] = (time.time(), value)
 
 
+def resolve_mx(domain, attempts=3):
+    """Resolve the mail exchanger. Returns (mx, status).
+
+    status is one of:
+      "ok"      - mx is the host to probe
+      "nomx"    - the domain definitively cannot receive mail
+      "dnsfail" - we could not find out. NOT the same as "no mailserver".
+
+    Separating the last two matters more than it looks. Collapsing a DNS
+    timeout into "no MX record" makes a healthy domain look DEAD, and a DEAD
+    verdict suppresses an address permanently. A resolver hiccup must never be
+    able to burn a real contact, so transient failures are retried and then
+    reported as unknown.
+    """
+    last = None
+    for i in range(attempts):
+        try:
+            recs = dns.resolver.resolve(domain, "MX", lifetime=8)
+            hosts = sorted(recs, key=lambda r: r.preference)
+            for h in hosts:
+                mx = str(h.exchange).rstrip(".")
+                # A single "." target is RFC 7505 null MX: explicitly no mail.
+                if mx and mx != ".":
+                    return mx, "ok"
+            return None, "nomx"
+        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+            # Definitive: the name exists with no MX, or does not exist at all.
+            # RFC 5321 s5.1 - fall back to the A record as an implicit MX.
+            try:
+                dns.resolver.resolve(domain, "A", lifetime=8)
+                return domain, "ok"
+            except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+                return None, "nomx"
+            except Exception as e:
+                last = e
+        except Exception as e:
+            # Timeout, SERVFAIL, no working nameserver: transient, so retry.
+            last = e
+        if i < attempts - 1:
+            time.sleep(0.6 * (i + 1))
+    return None, "dnsfail"
+
+
 def get_mx(domain):
-    try:
-        recs = dns.resolver.resolve(domain, "MX")
-        best = sorted(recs, key=lambda r: r.preference)
-        return str(best[0].exchange).rstrip(".")
-    except Exception:
-        return None
+    """Back-compat wrapper: host or None. Callers that must distinguish a
+    missing mailserver from a failed lookup should use resolve_mx."""
+    return resolve_mx(domain)[0]
 
 
 def _rcpt(mx, email, timeout=12):
@@ -92,12 +132,15 @@ def classify_domain(domain):
     if cached is not None:
         return cached
     result = _classify_domain_uncached(domain)
-    _cache_put(_domain_cache, domain, result)
+    if result[0] != "DNSFAIL":
+        _cache_put(_domain_cache, domain, result)
     return result
 
 
 def _classify_domain_uncached(domain):
-    mx = get_mx(domain)
+    mx, status = resolve_mx(domain)
+    if status == "dnsfail":
+        return "DNSFAIL", None, "MX lookup failed; no evidence either way"
     if not mx:
         return "NOMX", None, "no MX record"
     low = mx.lower()
@@ -136,13 +179,18 @@ def _verify_uncached(email):
     # If format is valid and domain is known provider -> SEND directly.
     # No probe needed; probing would just get IP-blocked.
     if domain in CONSUMER_PROVIDERS:
-        mx = get_mx(domain)
+        mx, status = resolve_mx(domain)
         if mx:
             return {"email": email, "verdict": "SEND", "mx": mx,
                     "detail": "major provider"}
+        if status == "dnsfail":
+            return {"email": email, "verdict": "UNKNOWN", "mx": None,
+                    "detail": "MX lookup failed"}
         return {"email": email, "verdict": "DEAD", "mx": None, "detail": "no MX"}
 
     dverdict, mx, ddetail = classify_domain(domain)
+    if dverdict == "DNSFAIL":
+        return {"email": email, "verdict": "UNKNOWN", "mx": None, "detail": ddetail}
     if dverdict == "NOMX":
         return {"email": email, "verdict": "DEAD", "mx": None, "detail": ddetail}
     if dverdict == "GATED":
