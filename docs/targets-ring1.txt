@@ -1,0 +1,96 @@
+# Ring 1 — companies whose business is email.
+# Chosen because they are the harshest audience for a verification engine:
+# if their own contact surface has a dead mailbox, that is a finding they
+# cannot dismiss, and the note explains itself.
+
+# --- cold outreach / sequencing platforms
+instantly.ai
+smartlead.ai
+lemlist.com
+reply.io
+woodpecker.co
+mailshake.com
+quickmail.com
+saleshandy.com
+klenty.com
+gmass.co
+overloop.com
+growbots.com
+expandi.io
+dripify.io
+la-growth-machine.com
+salesforge.ai
+amplemarket.com
+regie.ai
+lavender.ai
+humanlinker.com
+persana.ai
+
+# --- sales engagement / CRM adjacent
+outreach.io
+salesloft.com
+close.com
+streak.com
+mixmax.com
+yesware.com
+apollo.io
+
+# --- contact data / enrichment
+hunter.io
+snov.io
+lusha.com
+cognism.com
+seamless.ai
+uplead.com
+rocketreach.co
+clearbit.com
+clay.com
+findymail.com
+prospeo.io
+anymailfinder.com
+voilanorbert.com
+skrapp.io
+getprospect.com
+leadmagic.io
+listkit.io
+datagma.com
+wiza.co
+kaspr.io
+
+# --- email verification (direct competitors)
+zerobounce.net
+neverbounce.com
+bouncer.com
+emaillistverify.com
+millionverifier.com
+debounce.io
+verifalia.com
+kickbox.com
+mailfloss.com
+emailhippo.com
+myemailverifier.com
+clearout.io
+
+# --- deliverability / warmup / infrastructure
+mailreach.co
+warmupinbox.com
+folderly.com
+mailivery.io
+sendlayer.com
+mailgun.com
+postmarkapp.com
+sendgrid.com
+mailerlite.com
+
+# --- ABM / signals / agencies
+warmly.ai
+revenueholic.com
+tribeprospecting.com
+growthx.io
+leonardogroup.com
+saleslounge.com
+breezecrm.com
+compify.com
+persuva.com
+apolloforms.com
+autopilot.com

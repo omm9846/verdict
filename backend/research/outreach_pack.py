@@ -82,56 +82,81 @@ def audit_target(domain: str) -> dict:
 
 
 def draft_email(pack: dict, company: str) -> str:
-    """The note that goes with the findings. Short, specific, no pitch."""
+    """The note that goes with the findings.
+
+    The hook is that this is a by-product, not a campaign: we built a
+    verification engine, pointed it at companies who sell email for a living
+    because they are the harshest test, and this fell out. That framing is
+    true, it explains why a stranger is writing, and it gives the reader
+    something to react to that is about them rather than about us.
+    """
     d = pack["domain"]
+    who = company or d
     dead = [a for a in pack["addresses"] if a.get("confirmed_dead")]
     live = [a for a in pack["addresses"] if a.get("verdict") == "SEND"]
 
-    if dead:
-        lead = (f"{len(dead)} of the addresses on {d} are dead — a real "
-                f"sender gets a hard bounce:\n\n"
-                + "\n".join(f"  {a['email']}  ->  {str(a['detail'])[:70]}"
-                            for a in dead))
-        close = "Might be nothing, might be a form nobody's checked in a year."
-    elif pack["catchall"]:
-        lead = (f"{d} is catch-all — it accepts literally any address, "
-                f"including a random 22-character one I made up. So nothing "
-                f"can confirm an individual mailbox there, including whatever "
-                f"verifier you're running.")
-        close = "Worth knowing if you quote deliverability numbers on it."
-    elif live:
-        lead = (f"Checked the public addresses on {d} — all "
-                f"{len(live)} live and answering cleanly. Genuinely rarer "
-                f"than it should be.")
-        close = "Nothing for you to fix. Filing it as a good example."
-    else:
-        lead = f"Ran the public addresses on {d}; nothing conclusive came back."
-        close = "Mail server refused the probe, which is its right."
+    opener = (
+        f"We just built an open-source cold-outreach engine and I was stress-"
+        f"testing the verification gate on companies that sell email tooling — "
+        f"on the theory that you'd be the harshest thing to point it at.\n\n"
+        f"{who} came back with something you probably want to know."
+    )
 
     if dead:
+        shown = dead[:3]
+        body = (f"{len(dead)} of the public addresses on {d} are dead. A real "
+                f"sender gets a hard bounce, not a bounce-back to a form:\n\n"
+                + "\n".join(f"  {a['email']}  ->  {str(a['detail'])[:64]}"
+                            for a in shown))
+        if len(dead) > len(shown):
+            body += f"\n  ...and {len(dead) - len(shown)} more"
+        tail = ("Could be deliberate, could be a mailbox nobody's opened since "
+                "a migration. Either way someone trying to reach you that way "
+                "isn't getting through.")
         subject = (f"{len(dead)} dead addresses on {d}"
                    if len(dead) > 1 else f"a dead address on {d}")
+
     elif pack["catchall"]:
-        subject = f"{d} is catch-all — worth knowing"
+        body = (f"{d} is catch-all — it accepted a random 22-character mailbox "
+                f"I invented on the spot. That means no verifier can confirm "
+                f"any individual address on it, including ours, and including "
+                f"whatever you're using.")
+        tail = ("Not a problem in itself. Worth knowing if deliverability "
+                "numbers ever get quoted against that domain.")
+        subject = f"{d} accepts every address (including ones that don't exist)"
+
+    elif live:
+        body = (f"Nothing wrong. All {len(live)} public addresses on {d} are "
+                f"live and answering cleanly, which is rarer than it should be "
+                f"— most of the companies I ran this against had at least one "
+                f"dead mailbox.")
+        tail = "Nothing for you to do. Filing you under the good examples."
+        subject = f"{d} — clean, which was the surprise"
+
     else:
-        subject = f"{d} — clean contact audit"
+        body = (f"Ran the public addresses on {d} and got nothing conclusive — "
+                f"your mail server refuses automated probes, which is its "
+                f"right and frankly the correct posture.")
+        tail = "No finding, then. Filing it as a well-configured server."
+        subject = f"{d} — your mail server refused my probe (correctly)"
 
     return f"""Subject: {subject}
 
-Hi{' ' + company if company else ''} team,
+Hi{' ' + company if company else ' there'},
 
-I built an open-source SMTP verifier and I've been pointing it at companies
-whose business is email, on the theory that they'd want to know.
+{opener}
 
-{lead}
+{body}
 
-{close}
+{tail}
 
-Method is here if you want to check my working, or run it yourself against
-anything: https://github.com/omm9846/verdict — MIT, runs local, nothing
-uploads.
+The engine is MIT and runs locally, so you can check my working or point it
+at anything yourself: https://github.com/omm9846/verdict
+
+Not selling you anything — genuinely just what fell out of the test.
 
 - Om
+  hello@tryverdict.org
 """
 
 
