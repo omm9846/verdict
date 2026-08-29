@@ -72,8 +72,68 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "something broke on our end" }, { status: 500 });
   }
 
+  // Fire-and-forget confirmation. A signup that hears nothing back is a dead
+  // end, and launch-day traffic is the worst possible time to be silent. This
+  // must never be able to fail the signup itself: the row is already written,
+  // and an email outage is not the visitor's problem.
+  await sendConfirmation(email).catch((e) =>
+    console.error("waitlist confirmation:", e?.message ?? e)
+  );
+
   return NextResponse.json({
     ok: true,
-    message: "you're in. we'll email you when hosted spots open.",
+    message: "you're in. check your inbox.",
   });
 }
+
+async function sendConfirmation(to: string) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.WAITLIST_FROM ?? "Verdict <hello@tryverdict.org>";
+  if (!apiKey) return; // not configured yet; signups still work
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to,
+      subject: "You're on the Verdict list",
+      text: CONFIRMATION,
+      // Let recipients leave from their mail client. Costs nothing, and a
+      // one-click unsubscribe beats a spam complaint every time.
+      headers: { "List-Unsubscribe": `<mailto:${UNSUB}?subject=unsubscribe>` },
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`resend ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  }
+}
+
+const UNSUB = "hello@tryverdict.org";
+
+const CONFIRMATION = `You're on the list.
+
+Verdict is an open-source cold-outreach engine that verifies every mailbox
+over SMTP before it ships, so dead addresses never reach your domain.
+
+You don't have to wait for us to run it. It's MIT licensed and it runs on
+your machine, which means your list is never uploaded anywhere:
+
+  https://github.com/omm9846/verdict
+
+One thing worth knowing while you're here: no cloud host allows outbound
+port 25, ours included. That's why the checker on the site answers everything
+DNS can prove and stops there, and why the real SMTP gate runs locally. Any
+verifier claiming to confirm mailboxes from a browser is guessing.
+
+We'll email you when hosted spots open. That's the only reason we'll email.
+
+- Om
+  hello@tryverdict.org
+
+Reply "unsubscribe" and you're off the list, no hard feelings.
+`;
