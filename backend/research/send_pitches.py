@@ -31,8 +31,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import smtplib
 import ssl
+import urllib.error
+import urllib.request
 import sys
 import time
 from email.message import EmailMessage
@@ -89,6 +92,42 @@ def build(draft: dict, sender: str) -> EmailMessage:
     return msg
 
 
+def send_resend(draft: dict, sender: str, api_key: str):
+    """Send one message through the Resend API.
+
+    No tracking and no List-Unsubscribe: this is a personal message to a named
+    recipient, and dressing it as bulk mail is what gets it filtered as bulk
+    mail. reply_to is set explicitly so a reply reaches the mailbox a human
+    actually reads.
+    """
+    reply_to = re.search(r"<([^>]+)>", sender)
+    payload = {
+        "from": sender,
+        "to": [draft["to"]],
+        "subject": draft["subject"],
+        "text": draft["body"],
+        "reply_to": reply_to.group(1) if reply_to else sender,
+    }
+    req = urllib.request.Request(
+        "https://api.resend.com/emails",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Authorization": f"Bearer {api_key}",
+                 "Content-Type": "application/json",
+                 # Resend sits behind Cloudflare, which blocks the default
+                 # Python-urllib agent outright with a 403/1010.
+                 "User-Agent": "verdict-outreach/0.1",
+                 "Accept": "application/json"},
+        method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            body = json.loads(r.read().decode("utf-8"))
+        if not body.get("id"):
+            raise RuntimeError(f"no id in response: {body}")
+        return body["id"]
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"resend {e.code}: {e.read().decode('utf-8')[:200]}") from None
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--drafts", required=True)
@@ -96,6 +135,8 @@ def main():
                     help="actually send. Without it, this is a dry run.")
     ap.add_argument("--limit", type=int, help="send at most N messages")
     ap.add_argument("--delay", type=int, default=DELAY_SECONDS)
+    ap.add_argument("--via", choices=("smtp", "resend"), default="smtp",
+                    help="smtp uses your own mailbox; resend uses the API")
     a = ap.parse_args()
 
     host = os.environ.get("SMTP_HOST", "smtpout.secureserver.net")
@@ -108,8 +149,13 @@ def main():
     if a.limit:
         drafts = drafts[:a.limit]
 
-    if a.send and not (user and password):
-        raise SystemExit("SMTP_USER and SMTP_PASS must be set to send.")
+    resend_key = os.environ.get("RESEND_API_KEY")
+    if a.send and a.via == "smtp" and not (user and password):
+        raise SystemExit("SMTP_USER and SMTP_PASS must be set to send over SMTP.")
+    if a.send and a.via == "resend" and not resend_key:
+        raise SystemExit("RESEND_API_KEY must be set to send via Resend.")
+    if a.via == "resend" and not sender:
+        sender = os.environ.get("SMTP_FROM", "Om Soni <hello@tryverdict.org>")
 
     print(f"{'DRY RUN' if not a.send else 'SENDING'} — {len(drafts)} message(s)")
     print(f"from {sender} via {host}:{port}\n")
@@ -137,19 +183,22 @@ def main():
 
     for i, (d, _) in enumerate(sendable):
         try:
-            if port == 465:
-                srv = smtplib.SMTP_SSL(host, port, context=context, timeout=30)
+            if a.via == "resend":
+                send_resend(d, sender, resend_key)
+            elif port == 465:
+                with smtplib.SMTP_SSL(host, port, context=context, timeout=30) as srv:
+                    srv.login(user, password)
+                    srv.send_message(build(d, sender))
             else:
-                srv = smtplib.SMTP(host, port, timeout=30)
-                srv.starttls(context=context)
-            with srv:
-                srv.login(user, password)
-                srv.send_message(build(d, sender))
+                with smtplib.SMTP(host, port, timeout=30) as srv:
+                    srv.starttls(context=context)
+                    srv.login(user, password)
+                    srv.send_message(build(d, sender))
             sent += 1
             print(f"  sent -> {d['to']}")
         except Exception as e:
             failed += 1
-            print(f"  FAILED {d['to']}: {str(e)[:120]}")
+            print(f"  FAILED {d['to']}: {str(e)[:160]}")
 
         if i < len(sendable) - 1:
             time.sleep(a.delay)
