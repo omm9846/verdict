@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_ENGINE_URL || "https://verdict-engine-4g97.onrender.com";
 const WAITLIST_API = "/api/waitlist";
@@ -39,6 +39,55 @@ const CHECK_LABEL: Record<string, string> = {
   spf: "SPF",
   dmarc: "DMARC",
 };
+
+// The wait is ~1-3s of real DNS work. Naming each step turns dead time into
+// an explanation of what the engine actually does, which is more convincing
+// than a spinner and costs nothing.
+const PHASES = [
+  "reading the address",
+  "checking the spelling",
+  "resolving the mail server",
+  "reading SPF",
+  "reading DMARC",
+  "weighing it up",
+];
+
+const FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴",
+                "⠦", "⠧", "⠇", "⠏"];
+
+function Deliberating() {
+  const [tick, setTick] = useState(0);
+  const [reduced, setReduced] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (reduced) return;
+    const id = setInterval(() => setTick((t) => t + 1), 90);
+    return () => clearInterval(id);
+  }, [reduced]);
+
+  if (reduced) return <>deliberating...</>;
+
+  // Phases advance every ~700ms and hold on the last one rather than looping,
+  // so a slow response never looks like it restarted.
+  const phase = PHASES[Math.min(Math.floor(tick / 8), PHASES.length - 1)];
+
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+      <span aria-hidden="true" style={{ width: 9, display: "inline-block" }}>
+        {FRAMES[tick % FRAMES.length]}
+      </span>
+      <span>{phase}</span>
+    </span>
+  );
+}
 
 export function VerdictChecker() {
   const [email, setEmail] = useState("");
@@ -126,9 +175,13 @@ export function VerdictChecker() {
               border: "none",
               cursor: loading ? "wait" : "pointer",
               whiteSpace: "nowrap",
+              minWidth: 190,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {loading ? "hearing..." : "Rule on it →"}
+            {loading ? <Deliberating /> : "Rule on it →"}
           </button>
         </div>
       </form>
