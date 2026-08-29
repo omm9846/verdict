@@ -35,6 +35,21 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* top ticker */}
+      {/* Launch banner. Sits above the utility bar so it reads first. */}
+      <a
+        href="https://www.producthunt.com/products/verdict-11"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block bg-stamp-live text-ink font-mono text-[12px] tracking-[0.12em] uppercase hover:brightness-95 transition-all"
+      >
+        <div className="max-w-6xl mx-auto px-6 py-2 flex items-center justify-center gap-3 text-center flex-wrap">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-ink animate-pulse" />
+          <span className="font-semibold">Launching on Product Hunt</span>
+          <span className="opacity-70">Tuesday 1 September</span>
+          <span className="underline underline-offset-2">Get notified &rarr;</span>
+        </div>
+      </a>
+
       <div className="bg-ink text-paper font-mono text-[11px] tracking-[0.18em] uppercase">
         <div className="max-w-6xl mx-auto px-6 py-1.5 flex justify-between">
           <span>open source · MIT</span>
