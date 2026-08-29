@@ -2,7 +2,7 @@
 
 - domain: `snov.io`
 - mail server: `aspmx.l.google.com`
-- collected: 2026-08-29T10:10:43+00:00
+- collected: 2026-08-29T14:24:05+00:00
 
 | address | verdict | server said | where we found it |
 | --- | --- | --- | --- |
@@ -11,9 +11,9 @@
 | `info@snov.io` | **DEAD** | 5.1.1 The email account that you tried to reach does not exist. Please try double-checking the recipient's ema | common front-desk address |
 | `press@snov.io` | **DEAD** | 5.1.1 The email account that you tried to reach does not exist. Please try double-checking the recipient's ema | common front-desk address |
 | `sales@snov.io` | **DEAD** | 5.1.1 The email account that you tried to reach does not exist. Please try double-checking the recipient's ema | common front-desk address |
-| `snovio_dpo@snov.io` | SEND | 2.1.5 OK d9443c01a7336-2d7598a2694si81355205ad.96 - gsmtp | https://snov.io/privacy-policy |
+| `snovio_dpo@snov.io` | SEND | 2.1.5 OK 98e67ed59e1d1-398a08b3468si6561810a91.15 - gsmtp | https://snov.io/privacy-policy |
 | `support@snov.io` | **DEAD** | 5.1.1 The email account that you tried to reach does not exist. Please try double-checking the recipient's ema | common front-desk address |
-| `team@snov.io` | UNKNOWN | 4.2.1 The user you are trying to contact is receiving mail at a rate that prevents additional messages from be | common front-desk address |
+| `team@snov.io` | SEND | 2.1.5 OK 41be03b00d2f7-cc1f3724d62si9751901a12.352 - gsmtp | common front-desk address |
 
 ---
 
@@ -22,25 +22,26 @@
 ```
 Subject: 6 dead addresses on snov.io
 
-Hi Snov.io team,
+Hi Snov.io,
 
-I built an open-source SMTP verifier and I've been pointing it at companies
-whose business is email, on the theory that they'd want to know.
+We just built an open-source cold-outreach engine and I was stress-testing the verification gate on companies that sell email tooling — on the theory that you'd be the harshest thing to point it at.
 
-6 of the addresses on snov.io are dead — a real sender gets a hard bounce:
+Snov.io came back with something you probably want to know.
 
-  contact@snov.io  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  hello@snov.io  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  info@snov.io  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  press@snov.io  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  sales@snov.io  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  support@snov.io  ->  5.1.1 The email account that you tried to reach does not exist. Please
+6 of the public addresses on snov.io are dead. A real sender gets a hard bounce, not a bounce-back to a form:
 
-Might be nothing, might be a form nobody's checked in a year.
+  contact@snov.io  ->  5.1.1 The email account that you tried to reach does not exist. 
+  hello@snov.io  ->  5.1.1 The email account that you tried to reach does not exist. 
+  info@snov.io  ->  5.1.1 The email account that you tried to reach does not exist. 
+  ...and 3 more
 
-Method is here if you want to check my working, or run it yourself against
-anything: https://github.com/omm9846/verdict — MIT, runs local, nothing
-uploads.
+Could be deliberate, could be a mailbox nobody's opened since a migration. Either way someone trying to reach you that way isn't getting through.
+
+The engine is MIT and runs locally, so you can check my working or point it
+at anything yourself: https://github.com/omm9846/verdict
+
+Not selling you anything — genuinely just what fell out of the test.
 
 - Om
+  hello@tryverdict.org
 ```

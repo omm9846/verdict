@@ -2,7 +2,7 @@
 
 - domain: `sendlayer.com`
 - mail server: `aspmx.l.google.com`
-- collected: 2026-08-29T10:10:43+00:00
+- collected: 2026-08-29T14:32:14+00:00
 
 > domain is catch-all: it accepts every address, including random ones, so no verifier can confirm any individual mailbox
 
@@ -21,20 +21,23 @@
 ## Draft note
 
 ```
-Subject: sendlayer.com is catch-all — worth knowing
+Subject: sendlayer.com accepts every address (including ones that don't exist)
 
-Hi SendLayer team,
+Hi SendLayer,
 
-I built an open-source SMTP verifier and I've been pointing it at companies
-whose business is email, on the theory that they'd want to know.
+We just built an open-source cold-outreach engine and I was stress-testing the verification gate on companies that sell email tooling — on the theory that you'd be the harshest thing to point it at.
 
-sendlayer.com is catch-all — it accepts literally any address, including a random 22-character one I made up. So nothing can confirm an individual mailbox there, including whatever verifier you're running.
+SendLayer came back with something you probably want to know.
 
-Worth knowing if you quote deliverability numbers on it.
+sendlayer.com is catch-all — it accepted a random 22-character mailbox I invented on the spot. That means no verifier can confirm any individual address on it, including ours, and including whatever you're using.
 
-Method is here if you want to check my working, or run it yourself against
-anything: https://github.com/omm9846/verdict — MIT, runs local, nothing
-uploads.
+Not a problem in itself. Worth knowing if deliverability numbers ever get quoted against that domain.
+
+The engine is MIT and runs locally, so you can check my working or point it
+at anything yourself: https://github.com/omm9846/verdict
+
+Not selling you anything — genuinely just what fell out of the test.
 
 - Om
+  hello@tryverdict.org
 ```

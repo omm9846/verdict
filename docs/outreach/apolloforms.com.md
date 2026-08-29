@@ -2,7 +2,7 @@
 
 - domain: `apolloforms.com`
 - mail server: `none`
-- collected: 2026-08-29T10:11:02+00:00
+- collected: 2026-08-29T14:35:19+00:00
 
 > domain accepts no mail at all
 
@@ -11,20 +11,23 @@
 ## Draft note
 
 ```
-Subject: apolloforms.com — clean contact audit
+Subject: apolloforms.com — your mail server refused my probe (correctly)
 
-Hi Apollo Forms team,
+Hi Apollo Forms,
 
-I built an open-source SMTP verifier and I've been pointing it at companies
-whose business is email, on the theory that they'd want to know.
+We just built an open-source cold-outreach engine and I was stress-testing the verification gate on companies that sell email tooling — on the theory that you'd be the harshest thing to point it at.
 
-Ran the public addresses on apolloforms.com; nothing conclusive came back.
+Apollo Forms came back with something you probably want to know.
 
-Mail server refused the probe, which is its right.
+Ran the public addresses on apolloforms.com and got nothing conclusive — your mail server refuses automated probes, which is its right and frankly the correct posture.
 
-Method is here if you want to check my working, or run it yourself against
-anything: https://github.com/omm9846/verdict — MIT, runs local, nothing
-uploads.
+No finding, then. Filing it as a well-configured server.
+
+The engine is MIT and runs locally, so you can check my working or point it
+at anything yourself: https://github.com/omm9846/verdict
+
+Not selling you anything — genuinely just what fell out of the test.
 
 - Om
+  hello@tryverdict.org
 ```

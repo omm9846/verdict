@@ -2,7 +2,7 @@
 
 - domain: `saleslounge.com`
 - mail server: `saleslounge-com.mail.protection.outlook.com`
-- collected: 2026-08-29T10:13:50+00:00
+- collected: 2026-08-29T14:34:25+00:00
 
 | address | verdict | server said | where we found it |
 | --- | --- | --- | --- |
@@ -19,20 +19,23 @@
 ## Draft note
 
 ```
-Subject: saleslounge.com — clean contact audit
+Subject: saleslounge.com — your mail server refused my probe (correctly)
 
-Hi SalesLounge team,
+Hi SalesLounge,
 
-I built an open-source SMTP verifier and I've been pointing it at companies
-whose business is email, on the theory that they'd want to know.
+We just built an open-source cold-outreach engine and I was stress-testing the verification gate on companies that sell email tooling — on the theory that you'd be the harshest thing to point it at.
 
-Ran the public addresses on saleslounge.com; nothing conclusive came back.
+SalesLounge came back with something you probably want to know.
 
-Mail server refused the probe, which is its right.
+Ran the public addresses on saleslounge.com and got nothing conclusive — your mail server refuses automated probes, which is its right and frankly the correct posture.
 
-Method is here if you want to check my working, or run it yourself against
-anything: https://github.com/omm9846/verdict — MIT, runs local, nothing
-uploads.
+No finding, then. Filing it as a well-configured server.
+
+The engine is MIT and runs locally, so you can check my working or point it
+at anything yourself: https://github.com/omm9846/verdict
+
+Not selling you anything — genuinely just what fell out of the test.
 
 - Om
+  hello@tryverdict.org
 ```

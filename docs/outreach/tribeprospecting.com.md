@@ -2,7 +2,7 @@
 
 - domain: `tribeprospecting.com`
 - mail server: `smtp.google.com`
-- collected: 2026-08-29T10:12:14+00:00
+- collected: 2026-08-29T14:33:44+00:00
 
 | address | verdict | server said | where we found it |
 | --- | --- | --- | --- |
@@ -21,26 +21,26 @@
 ```
 Subject: 7 dead addresses on tribeprospecting.com
 
-Hi Tribe Prospecting team,
+Hi Tribe Prospecting,
 
-I built an open-source SMTP verifier and I've been pointing it at companies
-whose business is email, on the theory that they'd want to know.
+We just built an open-source cold-outreach engine and I was stress-testing the verification gate on companies that sell email tooling — on the theory that you'd be the harshest thing to point it at.
 
-7 of the addresses on tribeprospecting.com are dead — a real sender gets a hard bounce:
+Tribe Prospecting came back with something you probably want to know.
 
-  contact@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  hello@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  info@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  press@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  sales@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  support@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. Please
-  team@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. Please
+7 of the public addresses on tribeprospecting.com are dead. A real sender gets a hard bounce, not a bounce-back to a form:
 
-Might be nothing, might be a form nobody's checked in a year.
+  contact@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. 
+  hello@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. 
+  info@tribeprospecting.com  ->  5.1.1 The email account that you tried to reach does not exist. 
+  ...and 4 more
 
-Method is here if you want to check my working, or run it yourself against
-anything: https://github.com/omm9846/verdict — MIT, runs local, nothing
-uploads.
+Could be deliberate, could be a mailbox nobody's opened since a migration. Either way someone trying to reach you that way isn't getting through.
+
+The engine is MIT and runs locally, so you can check my working or point it
+at anything yourself: https://github.com/omm9846/verdict
+
+Not selling you anything — genuinely just what fell out of the test.
 
 - Om
+  hello@tryverdict.org
 ```
