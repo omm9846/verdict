@@ -1,0 +1,35 @@
+# Outlets that run domain-authentication and email-security stories.
+# Security trade press reaches more of the right readers for this than
+# general business wire does, and it feeds the wires afterwards.
+
+# --- wire and mainstream with real cyber desks
+reuters.com
+apnews.com
+bloomberg.com
+ft.com
+wsj.com
+cnbc.com
+benzinga.com
+
+# --- security trade, the natural home for this
+bleepingcomputer.com
+therecord.media
+darkreading.com
+helpnetsecurity.com
+infosecurity-magazine.com
+scworld.com
+cyberscoop.com
+securityweek.com
+theregister.com
+arstechnica.com
+404media.co
+krebsonsecurity.com
+riskybiznews.com
+
+# --- email and deliverability specialists
+spamresource.com
+wordtothewise.com
+emailonacid.com
+litmus.com
+validity.com
+onlyinfluencers.com
