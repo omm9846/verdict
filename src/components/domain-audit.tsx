@@ -41,7 +41,18 @@ export function DomainAudit() {
 
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState<"idle" | "loading" | "ok" | "error">("idle");
+  const [copied, setCopied] = useState(false);
   const [sentMsg, setSentMsg] = useState("");
+
+  function copyLink(d: string) {
+    const url = `https://tryverdict.org/audit/${d}`;
+    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 1500); };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).then(done, done);
+    } else {
+      done();
+    }
+  }
 
   async function run(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +61,7 @@ export function DomainAudit() {
     setAudit(null);
     setErr("");
     setSent("idle");
+    setCopied(false);
     try {
       const r = await fetch(`${API}/api/domain-audit`, {
         method: "POST",
@@ -139,6 +151,31 @@ export function DomainAudit() {
                 {audit.headline}
               </div>
             </div>
+          </div>
+
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+            padding: "10px 22px", borderBottom: "1px solid #eee",
+            background: "#faf8f5", fontSize: 12,
+          }}>
+            <span style={{ color: "#888" }}>permanent link</span>
+            <a
+              href={`/audit/${audit.domain}`}
+              style={{ color: "#1a1a2e", fontWeight: 600, wordBreak: "break-all" }}
+            >
+              tryverdict.org/audit/{audit.domain}
+            </a>
+            <button
+              type="button"
+              onClick={() => copyLink(audit.domain)}
+              style={{
+                fontFamily: "inherit", fontSize: 11, padding: "4px 10px",
+                border: "1px solid #ddd", background: "#fff", cursor: "pointer",
+                color: copied ? "#2dd4a0" : "#1a1a2e", marginLeft: "auto",
+              }}
+            >
+              {copied ? "copied" : "copy"}
+            </button>
           </div>
 
           {audit.checks.map((c) => {
