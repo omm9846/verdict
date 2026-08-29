@@ -14,12 +14,12 @@ const STEPS = [
   {
     n: "II.",
     name: "Verify",
-    body: "Every candidate gets an SMTP probe before anything ships. Catch-all domains flagged. Enterprise gateways detected. Dead mailboxes stamped and suppressed forever.",
+    body: "Every candidate is put on the stand. An SMTP probe before anything ships, catch-all domains flagged, enterprise gateways named, dead mailboxes stamped and suppressed for good.",
   },
   {
     n: "III.",
     name: "Ship",
-    body: "Only what passed the gate leaves your domain. Person-level cooldowns, suppression lists, and follow-up eligibility are enforced by the engine, not by your discipline.",
+    body: "Only what cleared the gate leaves your domain. Person-level cooldowns, suppression lists and follow-up eligibility are enforced by the engine — not by your discipline at 2am.",
   },
 ];
 
@@ -38,7 +38,7 @@ export default function Home() {
       <div className="bg-ink text-paper font-mono text-[11px] tracking-[0.18em] uppercase">
         <div className="max-w-6xl mx-auto px-6 py-1.5 flex justify-between">
           <span>open source · MIT</span>
-          <span className="hidden sm:inline">self-hosted · bring your own SMTP</span>
+          <span className="hidden sm:inline">your list never leaves your machine</span>
           <span>no contact database</span>
         </div>
       </div>
@@ -66,15 +66,16 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 pt-14 pb-20 grid lg:grid-cols-[1.2fr_1fr] gap-16 items-start">
         <div>
           <p className="font-mono text-xs tracking-[0.25em] uppercase text-ink-faint mb-6">
-            cold outreach, stamped
+            every address stands trial
           </p>
           <h1 className="font-display font-black text-5xl sm:text-6xl xl:text-7xl leading-[1.02] tracking-tight">
-            Every email gets a verdict before it ships.
+            Guilty until proven deliverable.
           </h1>
           <p className="mt-7 text-lg text-ink-soft max-w-xl leading-relaxed">
-            Verdict probes every mailbox, classifies every domain, and refuses to
-            send what will bounce. Your sender reputation never takes the damage.
-            Open source, self-hosted, no contact database.
+            Verdict probes every mailbox over SMTP and refuses to send what will
+            bounce. No contact database, no credits, no guessing — evidence, or it
+            does not ship. And because it runs on your machine, your list is never
+            uploaded anywhere. Not even to us.
           </p>
           <div className="mt-9 flex flex-wrap gap-4 items-center">
             <a
@@ -92,7 +93,7 @@ export default function Home() {
           </div>
           <div className="mt-10 max-w-2xl">
             <p className="font-mono text-xs text-ink-faint mb-4 uppercase tracking-[0.2em]">
-              try it right now — free, no signup
+              open a case — free, no signup
             </p>
             <VerdictChecker />
             <div className="mt-8 max-w-md">
@@ -125,8 +126,8 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-6 py-24 text-center">
           <p className="font-display text-3xl sm:text-4xl leading-snug">
             Apollo sells you <span className="italic">240 million contacts.</span>
-            Nobody tells you one in ten of those mailboxes does not exist,
-            and every dead send is a dent in your domain.
+            It does not mention that one in ten is a dead letter — and every one
+            you send is a mark against your domain that takes weeks to appeal.
           </p>
           <p className="font-mono text-xs tracking-[0.2em] uppercase text-ink-faint mt-8">
             verdict was built after burning exactly that way

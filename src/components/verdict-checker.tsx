@@ -3,16 +3,42 @@
 import { useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_ENGINE_URL || "https://verdict-engine-4g97.onrender.com";
+const WAITLIST_API = "/api/waitlist";
+const REPO = "https://github.com/omm9846/verdict";
+
+type Check = { check: string; ok: boolean | null; detail: string };
 
 type VerdictResult = {
-  ok?: boolean;
   email?: string;
   verdict?: string;
   detail?: string;
+  mx?: string | null;
+  checks?: Check[];
+  suggestion?: string;
   reason?: string;
 };
 
-const WAITLIST_API = "/api/waitlist";
+// DEAD and RISKY are findings; PLAUSIBLE is deliberately not "valid" — DNS
+// alone cannot confirm a mailbox exists, and saying otherwise is the lie the
+// rest of the category tells.
+const CHIP: Record<string, { color: string; label: string }> = {
+  DEAD: { color: "#ff6b5e", label: "DEAD" },
+  RISKY: { color: "#f0a850", label: "RISKY" },
+  PLAUSIBLE: { color: "#2dd4a0", label: "NO OBJECTION" },
+  UNKNOWN: { color: "#8b8b9e", label: "NO EVIDENCE" },
+};
+
+const CHECK_LABEL: Record<string, string> = {
+  syntax: "address format",
+  typo: "spelling",
+  disposable: "burner domain",
+  mx: "accepts mail",
+  role_account: "reaches a person",
+  gateway: "filtering gateway",
+  provider: "provider type",
+  spf: "SPF",
+  dmarc: "DMARC",
+};
 
 export function VerdictChecker() {
   const [email, setEmail] = useState("");
@@ -42,44 +68,33 @@ export function VerdictChecker() {
     }
   }
 
-  async function check(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email || loading) return;
+  async function check(target?: string) {
+    const addr = (target ?? email).trim();
+    if (!addr || loading) return;
     setLoading(true);
     setResult(null);
     try {
-      const r = await fetch(`${API}/api/verify`, {
+      const r = await fetch(`${API}/api/precheck`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: addr }),
       });
-      const d = await r.json();
-      setResult(d);
-      // Funnel latch: after a real verdict, prompt to join the waitlist
-      if (d?.verdict?.toUpperCase?.() === "SEND") {
-        setPromptWaitlist(true);
-      }
+      setResult(await r.json());
+      setPromptWaitlist(true);
     } catch {
       setResult({ reason: "engine unreachable — try again" });
     }
     setLoading(false);
   }
 
-  const chipColor =
-    result?.verdict === "SEND" ? "#2dd4a0"
-    : result?.verdict === "DEAD" ? "#ff6b5e"
-    : "#f0a850";
-
-  const friendlyLabel =
-    result?.verdict === "UNKNOWN"
-      ? "CAN'T AUTO-CHECK (server refused — try a different email or contact us)"
-      : result?.verdict === "CATCHALL"
-      ? "DOMAIN ACCEPTS ALL ADDRESSES (can't confirm individually)"
-      : (result?.verdict || "CHECKING").toUpperCase();
+  const chip = CHIP[result?.verdict ?? ""] ?? { color: "#8b8b9e", label: result?.verdict ?? "" };
 
   return (
     <div style={{ width: "100%", maxWidth: 600 }}>
-      <form onSubmit={check} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <form
+        onSubmit={(e) => { e.preventDefault(); check(); }}
+        style={{ display: "flex", flexDirection: "column", gap: 12 }}
+      >
         <div style={{ display: "flex", gap: 10 }}>
           <input
             type="email"
@@ -92,7 +107,7 @@ export function VerdictChecker() {
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 16,
               padding: "14px 18px",
-              border: `1px solid ${result ? chipColor : "#ddd"}`,
+              border: `1px solid ${result ? chip.color : "#ddd"}`,
               background: "#fff",
               color: "#1a1a2e",
               outline: "none",
@@ -113,44 +128,86 @@ export function VerdictChecker() {
               whiteSpace: "nowrap",
             }}
           >
-            {loading ? "probing..." : "Check it →"}
+            {loading ? "hearing..." : "Rule on it →"}
           </button>
         </div>
+      </form>
 
-        {result && (
-          <div
-            style={{
-              marginTop: 12,
-              padding: "14px 20px",
-              border: `2px solid ${chipColor}`,
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 15,
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              flexWrap: "wrap",
-            }}
-          >
+      {result?.reason && (
+        <div style={{ marginTop: 12, fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: "#c0392b" }}>
+          {result.reason}
+        </div>
+      )}
+
+      {result?.verdict && (
+        <div
+          style={{
+            marginTop: 14,
+            border: `2px solid ${chip.color}`,
+            fontFamily: "'IBM Plex Mono', monospace",
+            background: "#fff",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "14px 18px" }}>
             <span
               className="stamp"
-              style={{
-                color: chipColor,
-                borderColor: chipColor,
-                fontSize: 13,
-                padding: "4px 14px",
-                whiteSpace: "nowrap",
-              }}
+              style={{ color: chip.color, borderColor: chip.color, fontSize: 13, padding: "4px 14px", whiteSpace: "nowrap" }}
             >
-              {(friendlyLabel || "CHECKING").toUpperCase()}
+              {chip.label}
             </span>
-            {result?.verdict === "UNKNOWN" || result?.verdict === "CATCHALL" ? (
-              <span style={{ color: "#888", fontSize: 13 }}>
-                this mail server doesn't allow automated checks. the address is likely valid.
-              </span>
-            ) : null}
+            <span style={{ fontSize: 13, color: "#555", flex: 1, minWidth: 200 }}>{result.detail}</span>
           </div>
-        )}
-      </form>
+
+          {result.suggestion && (
+            <div style={{ padding: "0 18px 14px" }}>
+              <button
+                type="button"
+                onClick={() => { setEmail(result.suggestion!); check(result.suggestion!); }}
+                style={{
+                  fontFamily: "'IBM Plex Mono', monospace", fontSize: 12,
+                  padding: "7px 12px", background: "#faf8f5",
+                  border: "1px dashed #1a1a2e", cursor: "pointer", color: "#1a1a2e",
+                }}
+              >
+                try {result.suggestion} instead →
+              </button>
+            </div>
+          )}
+
+          {result.checks && result.checks.length > 0 && (
+            <div style={{ borderTop: "1px solid #eee", padding: "10px 18px 14px" }}>
+              {result.checks.map((c) => (
+                <div
+                  key={c.check}
+                  style={{ display: "flex", gap: 10, fontSize: 12, padding: "3px 0", color: "#666" }}
+                >
+                  <span style={{ color: c.ok === false ? "#ff6b5e" : c.ok === null ? "#aaa" : "#2dd4a0", width: 12 }}>
+                    {c.ok === false ? "✕" : c.ok === null ? "–" : "✓"}
+                  </span>
+                  <span style={{ width: 130, color: "#999" }}>{CHECK_LABEL[c.check] ?? c.check}</span>
+                  <span style={{ flex: 1 }}>{c.detail}</span>
+                </div>
+              ))}
+              {result.mx && (
+                <div style={{ display: "flex", gap: 10, fontSize: 12, padding: "3px 0", color: "#666" }}>
+                  <span style={{ width: 12, color: "#2dd4a0" }}>✓</span>
+                  <span style={{ width: 130, color: "#999" }}>mail server</span>
+                  <span style={{ flex: 1 }}>{result.mx}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ borderTop: "1px solid #eee", padding: "11px 18px", background: "#faf8f5", fontSize: 11, color: "#777", lineHeight: 1.6 }}>
+            That is every question DNS can answer. Whether this <em>specific</em> mailbox
+            exists takes an SMTP probe — and no cloud host allows outbound port 25, ours
+            included. So the gate runs on your machine, where your list stays.{" "}
+            <a href={REPO} style={{ color: "#1a1a2e", textDecoration: "underline" }}>
+              Run the full engine locally →
+            </a>
+          </div>
+        </div>
+      )}
 
       {promptWaitlist && wlState !== "ok" && (
         <div
@@ -163,12 +220,9 @@ export function VerdictChecker() {
           }}
         >
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-            that address is live. want the full engine — batch checks, discovery, send-gate?
+            want the whole gate — batch checks, discovery, SMTP probes before send?
           </div>
-          <form
-            onSubmit={joinWaitlist}
-            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-          >
+          <form onSubmit={joinWaitlist} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input
               type="email"
               required
@@ -176,26 +230,18 @@ export function VerdictChecker() {
               onChange={(e) => setWlEmail(e.target.value)}
               placeholder={email || "your@email.com"}
               style={{
-                flex: 1,
-                minWidth: 160,
+                flex: 1, minWidth: 160,
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 14,
-                padding: "9px 14px",
-                border: "1px solid #ddd",
+                fontSize: 14, padding: "9px 14px", border: "1px solid #ddd",
               }}
             />
             <button
               type="submit"
               disabled={wlState === "loading"}
               style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 12,
-                fontWeight: 600,
-                padding: "9px 16px",
-                background: "#1a1a2e",
-                color: "#fff",
-                border: "none",
-                cursor: wlState === "loading" ? "wait" : "pointer",
+                fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, fontWeight: 600,
+                padding: "9px 16px", background: "#1a1a2e", color: "#fff",
+                border: "none", cursor: wlState === "loading" ? "wait" : "pointer",
               }}
             >
               {wlState === "loading" ? "..." : "Join the waitlist →"}
@@ -207,8 +253,14 @@ export function VerdictChecker() {
         </div>
       )}
 
+      {wlState === "ok" && (
+        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#2dd4a0", marginTop: 12 }}>
+          {wlMsg}
+        </p>
+      )}
+
       <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#999", marginTop: 8 }}>
-        free · no signup · probes over SMTP, catch-all aware
+        free · no signup · nothing you type is stored
       </p>
     </div>
   );

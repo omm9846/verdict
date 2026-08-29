@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from engine.verify import verify
+from engine.precheck import precheck
 from engine import discovery
 
 app = FastAPI(title="Verdict Engine", version="0.1.0")
@@ -42,6 +43,15 @@ class GateRequest(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "verdict-engine"}
+
+
+@app.post("/api/precheck")
+def api_precheck(req: VerifyRequest):
+    """DNS-tier check. Runs anywhere, including hosts that block port 25.
+    Catches malformed addresses, dead domains, burners and typos for certain;
+    cannot confirm a mailbox exists. That needs /api/verify on a host with
+    outbound SMTP."""
+    return precheck(req.email)
 
 
 @app.post("/api/verify")
