@@ -1,0 +1,38 @@
+# Round two. Security and general tech only, no crypto or finance desks.
+# Independent security writers are included deliberately: small lists, but
+# every reader is the audience for a DMARC finding.
+
+# --- independent security writers with real audiences
+troyhunt.com
+grahamcluley.com
+schneier.com
+zetter-zeroday.com
+
+# --- security trade
+welivesecurity.com
+nakedsecurity.sophos.com
+malwarebytes.com
+tripwire.com
+threatpost.com
+csoonline.com
+techtarget.com
+computerweekly.com
+
+# --- general tech with security coverage
+zdnet.com
+wired.com
+techradar.com
+tomshardware.com
+engadget.com
+theinformation.com
+semafor.com
+restofworld.org
+theverge.com
+techcrunch.com
+axios.com
+
+# --- email and deliverability trade
+emailonacid.com
+litmus.com
+onlyinfluencers.com
+mailmodo.com
