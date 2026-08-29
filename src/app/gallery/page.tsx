@@ -178,7 +178,7 @@ function F5() {
           className="font-mono"
           style={{ fontSize: 18, color: "oklch(0.45 0.008 85)", marginTop: 28 }}
         >
-          verdict-xi-olive.vercel.app
+          tryverdict.org
         </div>
       </div>
     </div>

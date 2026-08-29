@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from engine.verify import verify
 from engine.precheck import precheck
+from engine.domain_audit import audit_domain
 from engine import discovery
 
 app = FastAPI(title="Verdict Engine", version="0.1.0")
@@ -43,6 +44,17 @@ class GateRequest(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "verdict-engine"}
+
+
+class DomainRequest(BaseModel):
+    domain: str
+
+
+@app.post("/api/domain-audit")
+def api_domain_audit(req: DomainRequest):
+    """Graded deliverability audit for a whole domain. DNS only, so it runs
+    on hosts that block outbound port 25."""
+    return audit_domain(req.domain)
 
 
 @app.post("/api/precheck")

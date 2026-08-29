@@ -51,6 +51,7 @@ export default function Home() {
         <div className="flex items-center gap-6 font-mono text-sm">
           <Link href="#how" className="hidden sm:inline hover:text-stamp-live transition-colors">how it works</Link>
           <Link href="#benchmarks" className="hidden sm:inline hover:text-stamp-live transition-colors">benchmarks</Link>
+          <Link href="/audit" className="hover:text-stamp-live transition-colors">free audit</Link>
           <Link href="/dashboard" className="hover:text-stamp-live transition-colors">product</Link>
           <ThemeToggle />
           <a
@@ -132,6 +133,32 @@ export default function Home() {
           <p className="font-mono text-xs tracking-[0.2em] uppercase text-ink-faint mt-8">
             verdict was built after burning exactly that way
           </p>
+        </div>
+      </section>
+
+      {/* free tool — the audit is the reason a stranger gives us an address */}
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="border-2 border-ink bg-card p-8 sm:p-12 shadow-[8px_8px_0_0_var(--color-stamp-live)]">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-ink-faint">
+            the impersonation test · free, no signup
+          </p>
+          <h2 className="font-display font-black text-3xl sm:text-4xl mt-4 leading-tight">
+            Anyone can sign your name.
+            <br />
+            Four records decide whether it holds up.
+          </h2>
+          <p className="mt-5 text-ink-soft max-w-2xl leading-relaxed">
+            SPF, DKIM, DMARC and MX are what stop a stranger sending mail as
+            you — and what decide whether your own mail is believed. Most
+            companies have never read their own. Some are wide open and have
+            no way of knowing.
+          </p>
+          <Link
+            href="/audit"
+            className="inline-block mt-7 bg-ink text-paper font-mono text-sm px-7 py-3.5 hover:bg-stamp-live transition-colors"
+          >
+            Audit your domain — 3 seconds →
+          </Link>
         </div>
       </section>
 

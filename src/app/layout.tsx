@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: "Verdict — every email gets a verdict before it ships",
     description:
       "Open-source cold-outreach engine. Discovers emails from public-web evidence, verifies over SMTP, refuses what will bounce.",
-    url: "https://verdict-xi-olive.vercel.app",
+    url: "https://tryverdict.org",
     siteName: "Verdict",
     type: "website",
     images: [{ url: "/logo-500.png", width: 500, height: 500 }],
@@ -47,7 +47,7 @@ const jsonLd = {
   applicationCategory: "BusinessApplication",
   description:
     "Open-source Apollo/Hunter alternative. Email discovery + SMTP verification gate for cold outreach. Self-hosted, MIT licensed.",
-  url: "https://verdict-xi-olive.vercel.app",
+  url: "https://tryverdict.org",
   offers: {
     "@type": "Offer",
     price: "0",

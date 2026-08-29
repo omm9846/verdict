@@ -2,7 +2,7 @@
 
 > Cold-outreach engine that verifies every mailbox before sending. Pattern discovery from public web. SMTP verification gate. Sub-4% bounce.
 
-- Demo: https://verdict-xi-olive.vercel.app
+- Demo: https://tryverdict.org
 - API: `POST /api/verify` · `POST /api/gate` · `POST /api/discover`
 - License: MIT
 - Stack: Next.js 15, TypeScript, Tailwind CSS, FastAPI, dnspython
