@@ -230,11 +230,10 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 py-24">
         <h2 className="font-display font-black text-4xl mb-2">Pricing</h2>
         <div className="rule-double w-40 mb-12" />
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 max-w-3xl">
           {[
-            { name: "Self-hosted", price: "$0", note: "forever", feats: ["Full pipeline, MIT licensed", "Bring your own SMTP or Resend key", "Community support"], cta: "Clone the repo" },
-            { name: "Starter", price: "$29", note: "/mo hosted", feats: ["2,500 verified sends / mo", "1 sending domain", "Follow-up waves automated", "Email support"], cta: "Get early access", featured: true },
-            { name: "Agency", price: "$99", note: "/mo hosted", feats: ["15,000 verified sends / mo", "Unlimited domains", "Client sub-accounts & reports", "Priority probe pool"], cta: "Get early access" },
+            { name: "Open source", price: "$0", note: "forever", feats: ["The whole engine, MIT licensed", "Runs on your machine, so the SMTP probe is real", "Your list is never uploaded anywhere", "CLI, Python API and MCP server for agents"], cta: "Clone the repo" },
+            { name: "Hosted", price: "$59", note: "/mo", feats: ["Everything above, nothing to install", "Batch verification and discovery", "Domain audits with shareable reports", "API access for your own tooling", "Email support"], cta: "Get early access", featured: true },
           ].map((t) => (
             <div
               key={t.name}
