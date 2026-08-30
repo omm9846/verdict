@@ -4,11 +4,11 @@
 
 Verdict finds email addresses through public-web pattern inference (no contact database), verifies them over SMTP with catch-all and gateway detection, and refuses to ship anything that will bounce. Self-hosted under MIT or hosted. Built as a free, privacy-first alternative to Apollo.io, Hunter.io, Instantly.ai, Clay, Smartlead, and Lemlist for founders, growth teams, and lead-gen agencies who care about email deliverability.
 
-[![Live Demo](https://img.shields.io/badge/live-demo-2D6A4F?style=flat-square)](https://verdict-xi-olive.vercel.app)
+[![Live Demo](https://img.shields.io/badge/live-demo-2D6A4F?style=flat-square)](https://tryverdict.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-1F2937?style=flat-square)](LICENSE)
 [![Next.js](https://img.shields.io/badge/next.js-15-black?style=flat-square)](https://nextjs.org)
 
-[Live Demo](https://verdict-xi-olive.vercel.app) · [Product Interface](https://verdict-xi-olive.vercel.app/dashboard) · [Report an Issue](https://github.com/omm9846/verdict/issues)
+[Live Demo](https://tryverdict.org) · [Product Interface](https://tryverdict.org/dashboard) · [Report an Issue](https://github.com/omm9846/verdict/issues)
 
 ---
 
@@ -56,7 +56,7 @@ The entire architecture since has followed one rule:
 
 | Verdict | Meaning | Ships? |
 | --- | --- | --- |
-| `LIVE` | Mailbox confirmed via `RCPT TO` handshake | ✅ yes |
+| `SEND` | Mailbox confirmed via `RCPT TO` handshake | ✅ yes |
 | `RISKY` | Real mailbox behind an enterprise gateway (Mimecast, Proofpoint); may reject cold senders | ⚠️ opt-in |
 | `CATCHALL` | Domain accepts every address; pattern evidence required, delivery unguaranteed | ⚠️ opt-in |
 | `DEAD` | Server confirmed user-unknown (`550 5.1.1`) | ❌ never |
@@ -137,28 +137,73 @@ compliance with local law is your responsibility.
 
 ## Quick start
 
+The engine is the product. It needs Python and two packages, and it has to run
+on your machine — confirming a mailbox requires outbound port 25, which every
+major cloud provider blocks.
+
 ```bash
 git clone https://github.com/omm9846/verdict.git
-cd verdict
-npm install
-npm run dev
+cd verdict/backend
+pip install -r requirements.txt
+
+python -m engine verify someone@example.com     # real SMTP probe
+python -m engine check  someone@example.com     # DNS tier, no probe
+python -m engine audit  example.com             # SPF/DKIM/DMARC/MX grade
 ```
 
-Open the live deployment: [https://verdict-xi-olive.vercel.app](https://verdict-xi-olive.vercel.app) (or run `npm run dev` locally).
+Everything prints JSON. `UNKNOWN` exits non-zero, so a script cannot read
+"no verdict" as "verdict: fine".
 
-### Using the engine against your own list
+### Give it to an agent
+
+Verdict ships an MCP server, so Claude and other agents can verify mail as a
+tool. No SDK, no API key — it speaks JSON-RPC over stdio and installs with
+nothing beyond the two packages above.
+
+```json
+{
+  "mcpServers": {
+    "verdict": {
+      "command": "python",
+      "args": ["-m", "engine.mcp_server"],
+      "cwd": "/path/to/verdict/backend"
+    }
+  }
+}
+```
+
+Tools: `verify_email`, `precheck_email`, `audit_domain`.
+
+### In Python
 
 ```python
-from email_discovery import discover        # pattern inference
-hit = discover("targetfirm.com", "Jane Doe")
+from engine.discovery import harvest, candidates
+from engine.verify import verify
 
-from verify_email_v2 import verify          # SMTP verdict
-verdict = verify(hit)
+found = harvest("targetfirm.com")                      # public-web evidence
+cands, patterns = candidates("targetfirm.com", found, "Jane Doe")
 
-if verdict["verdict"] == "SEND":
-    ship_it()                               # your sender, your domain
-else:
-    suppress(hit)                           # dead / catchall / risky / unknown
+for address in cands:
+    v = verify(address)
+    if v["verdict"] == "SEND":
+        ship_it(address)                               # your sender, your domain
+        break
+    suppress(address)                                  # dead / catchall / unknown
+```
+
+`UNKNOWN` means the server refused the probe, not that the address is bad.
+Treating it as invalid suppresses real contacts permanently.
+
+### Hosted
+
+Nothing to install: a free domain audit at
+[tryverdict.org/audit](https://tryverdict.org/audit), and the survey it came
+from at [tryverdict.org/spoofable](https://tryverdict.org/spoofable).
+
+### The web UI
+
+```bash
+npm install && npm run dev
 ```
 
 See [`docs/architecture.md`](docs/architecture.md) for the full gate logic.
