@@ -2,6 +2,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from engine.verify import verify
 from engine.precheck import precheck
 from engine.domain_audit import audit_domain
@@ -55,6 +57,57 @@ def api_domain_audit(req: DomainRequest):
     """Graded deliverability audit for a whole domain. DNS only, so it runs
     on hosts that block outbound port 25."""
     return audit_domain(req.domain)
+
+
+# An open endpoint on a free dyno needs a ceiling, or one caller takes the
+# service down for everyone.
+BATCH_MAX = 500
+
+
+class BatchRequest(BaseModel):
+    emails: list[str]
+
+
+@app.post("/api/batch")
+def api_batch(req: BatchRequest):
+    """DNS-tier hygiene over a list. No auth, no key.
+
+    Catches dead domains, typosquats, burner providers and role accounts, and
+    flags which addresses are on catch-all domains and therefore unverifiable
+    by anyone. It cannot confirm a mailbox exists: that needs an SMTP probe on
+    port 25, which every cloud host blocks, so it runs locally instead via
+    `python -m engine backtest`.
+    """
+    emails = [e.strip() for e in req.emails if e and e.strip()][:BATCH_MAX]
+    if not emails:
+        return {"error": "no addresses supplied", "results": []}
+
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        results = list(pool.map(precheck, emails))
+
+    counts = Counter(r.get("verdict") for r in results)
+    dead = [r for r in results if r.get("verdict") == "DEAD"]
+    typos = [r for r in results if r.get("suggestion")]
+
+    return {
+        "checked": len(results),
+        "truncated_at": BATCH_MAX if len(req.emails) > BATCH_MAX else None,
+        "summary": {
+            "unsendable": counts.get("DEAD", 0),
+            "risky": counts.get("RISKY", 0),
+            "no_objection": counts.get("PLAUSIBLE", 0),
+            "no_evidence": counts.get("UNKNOWN", 0),
+            "typos_found": len(typos),
+        },
+        "note": ("DNS tier only. This finds dead domains, typos, burner "
+                 "providers and catch-all domains. Whether an individual "
+                 "mailbox exists needs an SMTP probe on port 25, which no "
+                 "cloud host permits — run `python -m engine backtest` "
+                 "locally for that."),
+        "unsendable": [{"email": r["email"], "reason": r["detail"]} for r in dead],
+        "typos": [{"email": r["email"], "did_you_mean": r["suggestion"]} for r in typos],
+        "results": results,
+    }
 
 
 @app.post("/api/precheck")
