@@ -287,7 +287,7 @@ export default function Home() {
           <div className="font-mono text-sm space-y-2 text-paper/70">
             <div><a href="https://github.com/omm9846/verdict" className="hover:text-paper">GitHub</a></div>
             <div><a href="/dashboard" className="hover:text-paper">Product</a></div>
-            <div><a href="mailto:omsonii9846@gmail.com" className="hover:text-paper">omsonii9846@gmail.com</a></div>
+            <div><a href="mailto:hello@tryverdict.org" className="hover:text-paper">hello@tryverdict.org</a></div>
           </div>
         </div>
         <div className="border-t border-paper/10 font-mono text-[11px] text-paper/40">
