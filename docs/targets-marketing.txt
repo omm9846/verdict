@@ -1,0 +1,99 @@
+# Marketing and demand-gen agencies. They run outbound for clients, so a
+# bounce rate is a client problem rather than an inbox problem, and they buy
+# tools rather than build them.
+
+# --- b2b demand gen / growth
+newbreedrevenue.com
+kurvemarketing.com
+directiveconsulting.com
+refinelabs.com
+metricmarketing.ca
+gripped.io
+huble.com
+sixandflow.com
+inboundlabs.co
+newpath.digital
+avidlyagency.com
+mole-street.com
+bluleadz.com
+impactplus.com
+smartbugmedia.com
+lyfemarketing.com
+webfx.com
+straightnorth.com
+disruptiveadvertising.com
+kobedigital.com
+
+# --- performance and paid media
+brainlabsdigital.com
+tinuiti.com
+jellyfish.com
+croud.com
+incubeta.com
+merkle.com
+wpromote.com
+seer-interactive.com
+neilpatel.com
+adventureppc.com
+metricool.com
+socialchain.com
+
+# --- email and lifecycle specialists
+inboxbrand.com
+flowium.com
+chasedream.io
+emailaudience.com
+theemailmarketers.com
+uplers.com
+inboxarmy.com
+mailmodo.com
+klaviyo-experts.com
+fuelmade.com
+
+# --- content and inbound
+animalz.co
+grow-and-convert.com
+verblio.com
+brafton.com
+contentellect.com
+codelessio.com
+siegemedia.com
+foundationinc.co
+omniscientdigital.com
+ten-speed.com
+
+# --- outbound / sdr as a service
+belkins.io
+cience.com
+martal.ca
+saleshive.com
+sopro.io
+leadgenius.com
+callbox.com
+demandzen.com
+opsstream.com
+growthscribe.com
+
+# --- brand and full service with digital arms
+vaynermedia.com
+mekanism.com
+huge.com
+rga.com
+hugeinc.com
+firewoodmarketing.com
+barkleyus.com
+crispinporter.com
+mcgarrybowen.com
+72andsunny.com
+
+# --- smaller shops that buy tools directly
+ninjapromo.io
+singlegrain.com
+thrivereviews.com
+sociallyin.com
+firebellymarketing.com
+lonelybrand.com
+majux.com
+titangrowth.com
+onedigitalmarketing.com
+theshelf.com
