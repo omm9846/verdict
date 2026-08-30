@@ -1,0 +1,52 @@
+# Agencies and teams that run cold email for a living. They have a bounce log
+# from last week, and a bad bounce rate costs them a client rather than an
+# afternoon, which is what makes the backtest pitch land here.
+
+# --- lead generation and appointment setting
+belkins.io
+cience.com
+callbox.com
+martal.ca
+leadgenius.com
+salesroads.com
+memorybc.com
+opsstream.com
+saleshive.com
+pearllemonleads.com
+leadcandy.io
+growthscribe.com
+scalelead.co
+theleadgencompany.com
+
+# --- outbound and demand gen agencies
+growthx.io
+tribeprospecting.com
+revenueholic.com
+saleslounge.com
+leonardogroup.com
+demandzen.com
+sopro.io
+lake-b2b.com
+b2bleadsagency.com
+inboxarmy.com
+
+# --- email and lifecycle agencies
+inboxbrand.com
+theemailmarketers.com
+flowium.com
+chasedream.io
+sandiegoemail.com
+emailaudience.com
+
+# --- rev ops and sales consultancies that own sequences
+winningbydesign.com
+salesforcesearch.com
+theharrisconsultinggroup.com
+skaled.com
+memberboat.com
+
+# --- recruiting and staffing, heavy cold outbound
+recruiterflow.com
+loxo.co
+gem.com
+hirevue.com
