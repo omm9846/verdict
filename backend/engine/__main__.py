@@ -3,6 +3,7 @@
     python -m engine verify  someone@example.com
     python -m engine check   someone@example.com     # DNS tier, no probe
     python -m engine audit   example.com
+    python -m engine backtest bounced.csv [--sent all-sent.csv]
     python -m engine mcp                             # MCP server over stdio
 
 Everything prints JSON, so it pipes into jq or gets read by an agent without
@@ -24,6 +25,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     cmd, rest = argv[0], argv[1:]
+
+    if cmd == "backtest":
+        from engine.backtest import main as bt_main
+        return bt_main(rest)
 
     if cmd == "mcp":
         from engine.mcp_server import main as mcp_main
