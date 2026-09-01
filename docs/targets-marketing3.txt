@@ -1,0 +1,123 @@
+# Round three. Different pools from the first two: HubSpot and Klaviyo
+# partners, SaaS-specific shops, PR and comms firms, ecommerce agencies, and
+# regional independents. None of these appear in targets-marketing.txt or
+# targets-marketing2.txt.
+
+# --- SaaS and tech marketing specialists
+kalungi.com
+saaspartners.io
+heinzmarketing.com
+gotomarketinstitute.com
+insightpartners.com
+powerdigitalmarketing.com
+directiveconsulting.com
+roketto.com
+accelerationpartners.com
+ninetwothree.co
+markitors.com
+saasmarketer.io
+uplandsoftware.com
+tenspeedagency.com
+growthmodels.co
+
+# --- HubSpot and CRM partners
+newbreed.com
+impulsecreative.com
+smartbug.com
+salted-stone.com
+revenueriver.co
+lynton.com
+mediajunction.com
+spinweb.net
+denamico.com
+aptitude8.com
+huble.digital
+sixteenventures.com
+bristolstrategy.com
+prodigitalsolutions.com
+
+# --- ecommerce and lifecycle
+rightpoint.com
+bvaccel.com
+tinuiti.co.uk
+structuredsocial.com
+avex.agency
+electriceye.io
+noticed.co
+belardi-wong.com
+chasegrowth.com
+inflowmarketing.com
+
+# --- PR, comms and analyst relations
+propellerpr.com
+babelpr.com
+firebrandcomms.com
+resonancecrowd.com
+spreckley.co.uk
+whiteoaks.co.uk
+positiveperformance.co.uk
+cclgroupltd.com
+liberty-comms.com
+touchdownpr.com
+eskenzipr.com
+napierb2b.com
+themarketinggroup.co.uk
+prohibitionpr.co.uk
+
+# --- independent digital shops, UK and EU
+tomango.co.uk
+weareamplify.co.uk
+tillison.co.uk
+zoodikers.com
+optix-solutions.co.uk
+atomicdigital.co.uk
+bigstar.co.uk
+tribeagency.co.uk
+brightbulbdesign.co.uk
+weareimpression.com
+thoughtshift.co.uk
+varn.co.uk
+noisylittlemonkey.com
+bespokedigital.agency
+absoluteagency.co.uk
+
+# --- US independents
+kickcharge.com
+elevatorstudio.com
+ignitevisibility.com
+hawkemedia.com
+sociallypowerful.com
+thrivedigital.com
+digitalthirdcoast.com
+uproer.com
+knowmadinc.com
+threegirlsmedia.com
+brandpoint.com
+oneupweb.com
+mainstreetroi.com
+paperbrick.co
+newpathdigital.com
+
+# --- Canada, Australia, NZ
+jumpstartgo.com
+searchengine.com.au
+digitalnomadshq.com.au
+kwikkian.com.au
+zibmedia.com.au
+localdigital.com.au
+grow.marketing
+hero.co.nz
+pluslimited.co.nz
+firstpagenz.co.nz
+
+# --- India and SEA b2b
+grazitti.com
+smartaims.in
+ripenapps.com
+webguru-india.com
+sagipl.com
+b2bcapricorn.com
+mavlers.com
+theuptrend.in
+digitalsuccess.us
+markletic.com
