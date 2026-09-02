@@ -140,7 +140,7 @@ def resolve_mxs(domain, attempts=3):
     last = None
     for i in range(attempts):
         try:
-            recs = dns.resolver.resolve(domain, "MX", lifetime=8)
+            recs = dns.resolver.resolve(domain, "MX", lifetime=3)
             hosts = sorted(recs, key=lambda r: r.preference)
             mxs = []
             for h in hosts:
@@ -155,7 +155,7 @@ def resolve_mxs(domain, attempts=3):
             # Definitive: the name exists with no MX, or does not exist at all.
             # RFC 5321 s5.1 - fall back to the A record as an implicit MX.
             try:
-                dns.resolver.resolve(domain, "A", lifetime=8)
+                dns.resolver.resolve(domain, "A", lifetime=3)
                 return [domain], "ok"
             except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
                 return None, "nomx"
@@ -165,7 +165,7 @@ def resolve_mxs(domain, attempts=3):
             # Timeout, SERVFAIL, no working nameserver: transient, so retry.
             last = e
         if i < attempts - 1:
-            time.sleep(0.6 * (i + 1))
+            time.sleep(0.3 * (i + 1))
     return None, "dnsfail"
 
 
