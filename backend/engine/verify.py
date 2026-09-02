@@ -53,6 +53,37 @@ _cache_lock = threading.Lock()
 PROBE_DOMAIN = os.environ.get("VERDICT_PROBE_DOMAIN", "tryverdict.org")
 PROBE_SENDER = os.environ.get("VERDICT_PROBE_SENDER", f"probe@{PROBE_DOMAIN}")
 
+# Egress capability cache: whether outbound port 25 is reachable from this
+# host. Probing on Render/Vercel/AWS where port 25 is blocked wastes 25s per
+# address and returns nothing useful. Detect it once and skip all SMTP work.
+_EGRESS = {"checked": False, "open": None}
+
+
+def egress_smtp_open():
+    """Detect whether outbound port 25 is usable. Cached after first check.
+
+    Returns True if we can open an SMTP connection to a well-known MTA within
+    3 seconds. Cloud hosts (Render, Vercel, AWS, GCP, Azure) block egress on
+    port 25, so probing is futile — better to skip straight to DNS evidence.
+    """
+    with _cache_lock:
+        if _EGRESS["checked"]:
+            return _EGRESS["open"]
+        _EGRESS["checked"] = True
+        _EGRESS["open"] = _test_egress()
+        return _EGRESS["open"]
+
+
+def _test_egress():
+    for host in ("gmail-smtp-in.l.google.com", "alt1.gmail-smtp-in.l.google.com"):
+        try:
+            s = socket.create_connection((host, 25), timeout=3)
+            s.close()
+            return True
+        except Exception:
+            continue
+    return False
+
 
 def _cache_get(store, key, ttl):
     with _cache_lock:
@@ -425,6 +456,30 @@ def _verify_uncached(email):
             return {"email": email, "verdict": "UNKNOWN", "mx": None,
                     "detail": "MX lookup failed"}
         return {"email": email, "verdict": "DEAD", "mx": None, "detail": "no MX"}
+
+    # If egress port 25 is blocked (cloud hosts), skip all SMTP probes and
+    # go straight to DNS evidence. Probing on blocked egress wastes 20s+
+    # per address and only returns UNKNOWN or probe-blocked.
+    if not egress_smtp_open():
+        dverdict, mx, ddetail = classify_domain(domain)
+        if dverdict == "DNSFAIL":
+            return {"email": email, "verdict": "UNKNOWN", "mx": None, "detail": ddetail}
+        if dverdict == "NOMX":
+            return {"email": email, "verdict": "DEAD", "mx": None, "detail": ddetail}
+        if dverdict == "GATED":
+            return {"email": email, "verdict": "RISKY", "mx": mx, "detail": ddetail}
+        if dverdict == "CATCHALL":
+            return {"email": email, "verdict": "CATCHALL", "mx": mx, "detail": ddetail}
+        # egress blocked: fall back to DNS evidence
+        score, signals = _dns_send_evidence(domain)
+        gate = any(g in (mx or "").lower() for g in ENTERPRISE_GATES)
+        mxs, _ = resolve_mxs(domain)
+        mx = mxs[0] if mxs else None
+        if score >= 4 and not gate:
+            return {"email": email, "verdict": "SEND", "mx": mx,
+                    "detail": f"strong domain signals ({', '.join(signals[:3])}); egress blocked"}
+        return {"email": email, "verdict": "UNKNOWN", "mx": mx,
+                "detail": f"egress blocked; could not confirm via SMTP"}
 
     dverdict, mx, ddetail = classify_domain(domain)
     if dverdict == "DNSFAIL":
