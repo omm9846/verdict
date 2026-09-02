@@ -88,10 +88,15 @@ def _test_egress():
     override = _EGRESS_OVERRIDE
     if override is not None:
         return override.lower() in ("1", "true", "yes")
+    # Detect known cloud providers that block port 25 — skip probe entirely
+    if os.environ.get("RENDER") or os.environ.get("VERCEL") or \
+       os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("AWS_REGION") or \
+       os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get("AZURE_CLIENT_ID"):
+        return False
     # Quick check: try one well-known MTA with aggressive timeout
     for host in ("gmail-smtp-in.l.google.com", "outlook-com.olc.protection.outlook.com"):
         try:
-            s = socket.create_connection((host, 25), timeout=0.8)
+            s = socket.create_connection((host, 25), timeout=0.5)
             s.close()
             return True
         except Exception:
