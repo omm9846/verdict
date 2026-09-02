@@ -34,6 +34,15 @@ DISPOSABLE_DOMAINS = {
     "burnermail.io", "anonaddy.com", "simplelogin.io", "33mail.com",
 }
 
+# Role accounts (shared mailboxes, not individuals)
+ROLE_LOCALS = {
+    "info", "contact", "hello", "admin", "support", "sales", "help",
+    "office", "team", "mail", "enquiries", "inquiries", "webmaster",
+    "postmaster", "abuse", "security", "privacy", "legal", "billing",
+    "noreply", "no-reply", "donotreply", "marketing", "press", "careers",
+    "jobs", "hr", "accounts", "finance", "service", "customerservice",
+}
+
 
 # Result caches. Every probe costs an SMTP connection from our egress IP, and
 # receiving MTAs rate-limit or blacklist that IP under load. Caching means 500
