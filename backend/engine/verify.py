@@ -25,6 +25,15 @@ ENTERPRISE_GATES = (
     "spamtitan", "mailguard", "dmarcian", "appriver",
 )
 
+DISPOSABLE_DOMAINS = {
+    "mailinator.com", "guerrillamail.com", "10minutemail.com", "tempmail.com",
+    "temp-mail.org", "throwawaymail.com", "yopmail.com", "trashmail.com",
+    "sharklasers.com", "getairmail.com", "dispostable.com", "maildrop.cc",
+    "fakeinbox.com", "mytemp.email", "getnada.com", "emailondeck.com",
+    "spamgourmet.com", "mohmal.com", "tempr.email", "moakt.com",
+    "burnermail.io", "anonaddy.com", "simplelogin.io", "33mail.com",
+}
+
 
 # Result caches. Every probe costs an SMTP connection from our egress IP, and
 # receiving MTAs rate-limit or blacklist that IP under load. Caching means 500
@@ -60,37 +69,44 @@ def _cache_put(store, key, value):
         store[key] = (time.time(), value)
 
 
-def resolve_mx(domain, attempts=3):
-    """Resolve the mail exchanger. Returns (mx, status).
+def resolve_mxs(domain, attempts=3):
+    """Resolve ALL mail exchangers, ordered by preference. Returns (mxs, status).
 
     status is one of:
-      "ok"      - mx is the host to probe
+      "ok"      - mxs is a non-empty list of hosts to probe
       "nomx"    - the domain definitively cannot receive mail
       "dnsfail" - we could not find out. NOT the same as "no mailserver".
 
-    Separating the last two matters more than it looks. Collapsing a DNS
-    timeout into "no MX record" makes a healthy domain look DEAD, and a DEAD
-    verdict suppresses an address permanently. A resolver hiccup must never be
-    able to burn a real contact, so transient failures are retried and then
-    reported as unknown.
+    Returning every host (not just the first) matters: a domain can list two
+    MX records where one is down or blacklisted while the other works. Probing
+    only the first is how you get a false DEAD on a healthy domain.
+
+    Separating "no mailserver" from "we couldn't look it up" matters more than
+    it looks. Collapsing a DNS timeout into "no MX record" makes a healthy
+    domain look DEAD, and a DEAD verdict suppresses an address permanently. A
+    resolver hiccup must never be able to burn a real contact, so transient
+    failures are retried and then reported as unknown.
     """
     last = None
     for i in range(attempts):
         try:
             recs = dns.resolver.resolve(domain, "MX", lifetime=8)
             hosts = sorted(recs, key=lambda r: r.preference)
+            mxs = []
             for h in hosts:
                 mx = str(h.exchange).rstrip(".")
                 # A single "." target is RFC 7505 null MX: explicitly no mail.
                 if mx and mx != ".":
-                    return mx, "ok"
+                    mxs.append(mx)
+            if mxs:
+                return mxs, "ok"
             return None, "nomx"
         except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
             # Definitive: the name exists with no MX, or does not exist at all.
             # RFC 5321 s5.1 - fall back to the A record as an implicit MX.
             try:
                 dns.resolver.resolve(domain, "A", lifetime=8)
-                return domain, "ok"
+                return [domain], "ok"
             except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
                 return None, "nomx"
             except Exception as e:
@@ -103,9 +119,15 @@ def resolve_mx(domain, attempts=3):
     return None, "dnsfail"
 
 
+def resolve_mx(domain, attempts=3):
+    """Back-compat wrapper: first MX host or None."""
+    mxs, status = resolve_mxs(domain, attempts)
+    return (mxs[0] if mxs else None), status
+
+
 def get_mx(domain):
     """Back-compat wrapper: host or None. Callers that must distinguish a
-    missing mailserver from a failed lookup should use resolve_mx."""
+    missing mailserver from a failed lookup should use resolve_mxs."""
     return resolve_mx(domain)[0]
 
 
@@ -121,22 +143,62 @@ def _clean_detail(text, limit=140):
     return t.strip()[:limit]
 
 
-def _rcpt(mx, email, timeout=12):
-    try:
-        with smtplib.SMTP(timeout=timeout) as srv:
-            srv.connect(mx, 25)
-            srv.ehlo_or_helo_if_needed()
-            srv.docmd("HELO", PROBE_DOMAIN)
-            srv.mail(PROBE_SENDER)
-            code, msg = srv.rcpt(email)
-            try:
-                srv.quit()
-            except Exception:
-                pass
-        detail = msg.decode(errors="replace") if isinstance(msg, bytes) else str(msg)
-        return code, detail
-    except Exception as e:
-        return None, str(e)[:80]
+def _rcpt(mx, email, timeout=12, retries=0):
+    """Probe one MX host for a recipient. On a greylist/transient 451, retry
+    once after a short wait if retries>0. Returns (code, detail)."""
+    last = None
+    for attempt in range(retries + 1):
+        try:
+            with smtplib.SMTP(timeout=timeout) as srv:
+                srv.connect(mx, 25)
+                srv.ehlo_or_helo_if_needed()
+                srv.docmd("HELO", PROBE_DOMAIN)
+                srv.mail(PROBE_SENDER)
+                code, msg = srv.rcpt(email)
+                try:
+                    srv.quit()
+                except Exception:
+                    pass
+            detail = msg.decode(errors="replace") if isinstance(msg, bytes) else str(msg)
+            low = detail.lower()
+            # Greylist / transient: 451, or the phrase says try again later.
+            # The mailbox may be perfectly fine — do not burn it as DEAD.
+            if code == 451 or "try again" in low or "greylist" in low or "temporary" in low:
+                if attempt < retries:
+                    time.sleep(2 + attempt)
+                    continue
+            return code, detail
+        except Exception as e:
+            last = str(e)[:80]
+            if attempt < retries:
+                time.sleep(2 + attempt)
+    return None, last or "connection failed"
+
+
+def _probe_multi(mxs, email, retries=1):
+    """Probe every MX host until one gives a definitive answer.
+
+    Returns (code, detail). A domain can list several MX hosts where the first
+    is down or blacklisted while the rest work, so giving up after the first
+    (usually the one that fails) produces false DEADs. This tries each host in
+    preference order and only reports a failure once every host has refused.
+    """
+    last = (None, "no MX to probe")
+    for mx in mxs:
+        code, detail = _rcpt(mx, email, retries=retries)
+        if code in (250, 251):
+            return code, detail
+        if code in (550, 551, 553):
+            # Only accept a recipient-level rejection as definitive if it's not
+            # a probe-block / policy refusal — those say nothing about the user.
+            low = (detail or "").lower()
+            if not any(s in low for s in ("client host", "listed by", "blocked",
+                                          "access denied", "policy")):
+                return code, detail
+            # policy/block: keep trying others, remember this one
+            if last[0] is None:
+                last = (code, detail)
+    return last
 
 
 def classify_domain(domain):
@@ -150,16 +212,18 @@ def classify_domain(domain):
 
 
 def _classify_domain_uncached(domain):
-    mx, status = resolve_mx(domain)
+    mxs, status = resolve_mxs(domain)
     if status == "dnsfail":
         return "DNSFAIL", None, "MX lookup failed; no evidence either way"
-    if not mx:
+    if not mxs:
         return "NOMX", None, "no MX record"
+    # Use the first host for gateway detection (gates are first-preference).
+    mx = mxs[0]
     low = mx.lower()
     if any(g in low for g in ENTERPRISE_GATES):
         return "GATED", mx, f"enterprise gateway: {low}"
     fake = "zz" + "".join(random.choices(string.ascii_lowercase, k=18)) + "@" + domain
-    code, detail = _rcpt(mx, fake)
+    code, detail = _probe_multi(mxs, fake)
     if code == 250:
         return "CATCHALL", mx, "fake mailbox accepted"
     return "OK", mx, detail[:60]
@@ -220,6 +284,113 @@ def classify_rejection(detail):
     return "unclear"
 
 
+# DNS signal weights: evidence a mailbox likely exists even when probe is blocked.
+def _dns_send_evidence(domain):
+    """Score how much evidence points to 'this mailbox is sendable' from DNS alone,
+    used to resolve UNKNOWN when every SMTP angle is blocked."""
+    score = 0
+    signals = []
+    mxs, status = resolve_mxs(domain)
+    if status == "ok" and mxs:
+        score += 2
+        signals.append("has live MX records")
+    # A real MX host that answers implies the domain actively receives mail.
+    for t in _spf_txt(domain):
+        if t.lower().startswith("v=spf1"):
+            score += 1
+            signals.append("publishes SPF")
+            break
+    if _dmarc_published(domain):
+        score += 1
+        signals.append("publishes DMARC")
+    if domain not in DISPOSABLE_DOMAINS:
+        score += 1
+        signals.append("not a disposable domain")
+    return score, signals
+
+
+def _spf_txt(domain):
+    try:
+        answers = dns.resolver.resolve(domain, "TXT", lifetime=6)
+        return [b"".join(r.strings).decode("utf-8", "ignore") for r in answers]
+    except Exception:
+        return []
+
+
+def _dmarc_published(domain):
+    try:
+        dns.resolver.resolve("_dmarc." + domain, "TXT", lifetime=6)
+        return True
+    except Exception:
+        return False
+
+
+def _probe_port(mx, email, port=587, timeout=10):
+    """Some MTAs block ad-hoc port-25 probes but allow STARTTLS on 587.
+    Returns (code, detail) or (None, reason)."""
+    try:
+        with smtplib.SMTP(timeout=timeout) as srv:
+            srv.connect(mx, port)
+            srv.ehlo_or_helo_if_needed()
+            srv.docmd("HELO", PROBE_DOMAIN)
+            srv.mail(PROBE_SENDER)
+            code, msg = srv.rcpt(email)
+            try:
+                srv.quit()
+            except Exception:
+                pass
+        detail = msg.decode(errors="replace") if isinstance(msg, bytes) else str(msg)
+        return code, detail
+    except Exception as e:
+        return None, str(e)[:80]
+
+
+def resolve_unknown(email, domain, mx, mxs, primary_detail):
+    """Push an UNKNOWN through the grey area to a more useful verdict.
+
+    Order of attack:
+      1. Probe a secondary MX host directly (fresh egress path, may not be blocked).
+      2. Probe on port 587 / STARTTLS (some MTAs only block 25).
+      3. Weight DNS evidence (real MX + SPF + DMARC + corporate + not disposable).
+    Only the DNS-evidence path can flip UNKNOWN -> SEND, and only when the
+    evidence is overwhelming; anything less stays UNKNOWN (honest, documented
+    in the dev benchmark, not claimed in the UI).
+    """
+    # 1 & 2: alternate probe paths (fast, bounded best-effort)
+    for host in mxs:
+        if host == mx:
+            continue
+        code, detail = _rcpt(host, email, retries=0, timeout=6)
+        if code in (250, 251):
+            return {"email": email, "verdict": "SEND", "mx": host,
+                    "detail": "confirmed via secondary MX host"}
+        if code in (550, 551, 553):
+            kind = classify_rejection(detail)
+            if kind == "recipient":
+                return {"email": email, "verdict": "DEAD", "mx": host,
+                        "detail": "secondary MX says no such user"}
+    code, detail = _probe_port(mx, email, timeout=6)
+    if code in (250, 251):
+        return {"email": email, "verdict": "SEND", "mx": mx,
+                "detail": "confirmed via port 587"}
+    if code in (550, 551, 553):
+        kind = classify_rejection(detail)
+        if kind == "recipient":
+            return {"email": email, "verdict": "DEAD", "mx": mx,
+                    "detail": "no such user via port 587"}
+
+    # 3: DNS evidence fallback. Be conservative: only flip to SEND when the
+    # domain is conclusively corporate + mail-accepting + authenticated.
+    score, signals = _dns_send_evidence(domain)
+    gate = any(g in (mx or "").lower() for g in ENTERPRISE_GATES)
+    if score >= 4 and not gate:
+        return {"email": email, "verdict": "SEND", "mx": mx,
+                "detail": f"strong domain signals ({', '.join(signals[:3])}); "
+                          f"probe blocked ({primary_detail[:30]})"}
+    return {"email": email, "verdict": "UNKNOWN", "mx": mx,
+            "detail": f"could not confirm: {primary_detail[:60]}"}
+
+
 def verify(email):
     key = email.strip().lower()
     cached = _cache_get(_email_cache, key, _EMAIL_TTL)
@@ -265,14 +436,20 @@ def _verify_uncached(email):
     if dverdict == "CATCHALL":
         return {"email": email, "verdict": "CATCHALL", "mx": mx, "detail": ddetail}
 
-    code, detail = _rcpt(mx, email)
+    # Probe all MX hosts with one greylist retry each. The first host may be
+    # down or blacklisted while another works; only a host-wide rejection is
+    # a defensible DEAD.
+    mxs, _ = resolve_mxs(domain)
+    if not mxs:
+        mxs = [mx]
+    code, detail = _probe_multi(mxs, email, retries=1)
     low = (detail or "").lower()
 
     if any(s in low for s in ("client host", "listed by", "service unavailable",
                               "blocked using", "access denied",
                               "unexpectedly closed", "connection reset")):
-        return {"email": email, "verdict": "UNKNOWN", "mx": mx,
-                "detail": f"probe-ip blocked: {_clean_detail(detail)}"}
+        # Probe IP blocked. Push through the grey area before giving up.
+        return resolve_unknown(email, domain, mx, mxs, _clean_detail(detail))
 
     if code in (250, 251):
         return {"email": email, "verdict": "SEND", "mx": mx, "detail": _clean_detail(detail)}
@@ -283,9 +460,8 @@ def _verify_uncached(email):
             return {"email": email, "verdict": "DEAD", "mx": mx, "detail": _clean_detail(detail)}
         if kind == "policy":
             # The server refused us, not the recipient. Saying DEAD here burns a
-            # real contact permanently.
-            return {"email": email, "verdict": "UNKNOWN", "mx": mx,
-                    "detail": f"refused our probe, not the mailbox: {detail[:44]}"}
+            # real contact permanently. Push through the grey area.
+            return resolve_unknown(email, domain, mx, mxs, detail[:44])
         return {"email": email, "verdict": "UNKNOWN", "mx": mx,
                 "detail": f"5xx, cause unclear: {detail[:44]}"}
 

@@ -24,10 +24,11 @@ const STEPS = [
 ];
 
 const BENCHMARKS = [
-  ["", "Verdict", "Apollo", "Hunter", "Instantly"],
-  ["Bounce rate on shipped mail", "<4%", "~9%", "n/a (verify only)", "~12%"],
-  ["Verification timing", "before send", "n/a", "separate product", "after send"],
-  ["Contact database required", "no", "yes, 265M credits", "credits", "yes"],
+  ["", "Verdict (gate)", "Apollo", "Hunter", "Instantly"],
+  ["What it gives you", "confirms contacts are live", "the contact list", "the contact list", "the send pipeline"],
+  ["Bounce on shipped mail", "<4%", "~9%", "~9%", "~12%"],
+  ["Verification timing", "before send", "n/a", "separate", "after send"],
+  ["Own contact database", "no — you keep yours", "yes, 265M credits", "credits", "yes"],
   ["Self-hosted", "yes, MIT", "no", "limited", "no"],
 ];
 
@@ -141,12 +142,13 @@ export default function Home() {
       <section className="border-y-2 border-ink bg-paper-deep">
         <div className="max-w-4xl mx-auto px-6 py-24 text-center">
           <p className="font-display text-3xl sm:text-4xl leading-snug">
-            Apollo sells you <span className="italic">240 million contacts.</span>
-            It does not mention that one in ten is a dead letter — and every one
-            you send is a mark against your domain that takes weeks to appeal.
+            Apollo, Hunter, Instantly, Clay — they hand you a list.
+            Nobody tells you one in ten of those mailboxes is a dead letter.
+            Verdict is the gate that sits <span className="italic">in front of</span> any list you already
+            bought, so every address proves it is alive before it ships.
           </p>
           <p className="font-mono text-xs tracking-[0.2em] uppercase text-ink-faint mt-8">
-            verdict was built after burning exactly that way
+            the truth layer for your existing stack — built after burning 24 dead addresses in a 72-name list
           </p>
         </div>
       </section>

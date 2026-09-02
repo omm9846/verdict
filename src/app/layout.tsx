@@ -15,13 +15,14 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Verdict — open-source Apollo alternative | verify every cold email before it ships",
+  title: "Verdict — verify your Apollo, Hunter & Instantly contacts before you send",
   description:
-    "Verdict is an open-source cold-outreach engine and Apollo/Hunter alternative. Email pattern discovery + SMTP verification gate holds bounce rate under 4%. Self-hosted or hosted.",
+    "Verdict is the truth layer for your cold outreach stack. Run an SMTP verification gate over the lists Apollo, Hunter, Instantly or Clay give you, hold bounce rate under 4%, and never let a dead address ship. Open source and self-hosted.",
   keywords: [
-    "apollo alternative", "hunter.io alternative", "instantly ai alternative",
-    "cold email verification", "email finder open source", "self-hosted cold outreach",
-    "smtp verification", "bounce rate reducer", "b2b lead generation", "clay alternative",
+    "verify apollo contacts", "apollo bounce rate fix", "hunter io email verification",
+    "instantly ai verification", "cold email verification", "smtp verification",
+    "bounce rate reducer", "email finder verification", "free email verifier",
+    "self-hosted cold outreach",
   ],
   openGraph: {
     title: "Verdict — every email gets a verdict before it ships",
@@ -46,7 +47,7 @@ const jsonLd = {
   operatingSystem: "Web",
   applicationCategory: "BusinessApplication",
   description:
-    "Open-source Apollo/Hunter alternative. Email discovery + SMTP verification gate for cold outreach. Self-hosted, MIT licensed.",
+    "SMTP verification gate for cold outreach. Run the lists Apollo, Hunter, Instantly or Clay give you through Verdict to confirm every address is live before you send. Self-hosted, MIT licensed.",
   url: "https://tryverdict.org",
   offers: {
     "@type": "Offer",
@@ -55,8 +56,8 @@ const jsonLd = {
   },
   license: "MIT",
   featureList: [
-    "Email pattern discovery from public web",
     "SMTP verification gate before send",
+    "Verify lists from Apollo, Hunter, Instantly & Clay",
     "Catch-all domain detection",
     "Gateway classification",
     "Self-hosted, MIT licensed",
