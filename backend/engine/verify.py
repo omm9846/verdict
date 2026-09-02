@@ -140,7 +140,15 @@ def resolve_mxs(domain, attempts=3):
     last = None
     for i in range(attempts):
         try:
-            recs = dns.resolver.resolve(domain, "MX", lifetime=3)
+# Use custom resolver with aggressive timeouts for cloud environments
+    resolver = dns.resolver.Resolver()
+    resolver.lifetime = 2.0
+    resolver.timeout = 2.0
+    resolver.nameservers = ["8.8.8.8", "1.1.1.1"]  # Google + Cloudflare DNS
+
+    for i in range(attempts):
+        try:
+            recs = resolver.resolve(domain, "MX")
             hosts = sorted(recs, key=lambda r: r.preference)
             mxs = []
             for h in hosts:
@@ -155,17 +163,17 @@ def resolve_mxs(domain, attempts=3):
             # Definitive: the name exists with no MX, or does not exist at all.
             # RFC 5321 s5.1 - fall back to the A record as an implicit MX.
             try:
-                dns.resolver.resolve(domain, "A", lifetime=3)
+                resolver.resolve(domain, "A")
                 return [domain], "ok"
             except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
                 return None, "nomx"
-            except Exception as e:
-                last = e
-        except Exception as e:
+            except Exception:
+                pass
+        except Exception:
             # Timeout, SERVFAIL, no working nameserver: transient, so retry.
-            last = e
-        if i < attempts - 1:
-            time.sleep(0.3 * (i + 1))
+            if i < attempts - 1:
+                time.sleep(0.1)
+                continue
     return None, "dnsfail"
 
 
