@@ -470,6 +470,24 @@ def _verify_uncached(email):
     local = parts[0]
     domain = parts[1].lower()
 
+    # Universal pre-checks: catch issues that affect all providers
+    # 1. Disposable/burner domains
+    if domain in DISPOSABLE_DOMAINS:
+        return {"email": email, "verdict": "RISKY", "mx": None,
+                "detail": "disposable/burner domain"}
+
+    # 2. Role accounts (info@, support@, sales@, etc.)
+    local_l = local.lower().split("+")[0]
+    if local_l in ROLE_LOCALS:
+        return {"email": email, "verdict": "RISKY", "mx": None,
+                "detail": "role/shared mailbox"}
+
+    # 3. Typo-squat detection on common providers
+    typo = suggest_domain(domain)
+    if typo:
+        return {"email": email, "verdict": "DEAD", "mx": None,
+                "detail": f"looks like typo of {typo}"}
+
     # Fast path: major consumer providers always validate at signup,
     # never do catch-all, but block external probes.
     # If format is valid and domain is known provider -> SEND directly.
