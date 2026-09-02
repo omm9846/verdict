@@ -60,6 +60,11 @@ _EGRESS = {"checked": False, "open": None, "ts": 0}
 
 _EGRESS_TTL = 6 * 3600  # 6 hours
 
+# Allow environment override: EGRESS_SMTP_OPEN=false on known-blocked hosts
+# (e.g., Render) skips the probe entirely.
+import os
+_EGRESS_OVERRIDE = os.environ.get("EGRESS_SMTP_OPEN")
+
 
 def egress_smtp_open():
     """Detect whether outbound port 25 is usable. Cached after first check.
@@ -79,11 +84,14 @@ def egress_smtp_open():
 
 
 def _test_egress():
-    # Try multiple well-known MTAs with short timeout; fail fast.
-    for host in ("gmail-smtp-in.l.google.com", "alt1.gmail-smtp-in.l.google.com",
-                 "outlook-com.olc.protection.outlook.com"):
+    # Quick check: if env says blocked, trust it (for Render, set EGRESS_SMTP_OPEN=false)
+    override = _EGRESS_OVERRIDE
+    if override is not None:
+        return override.lower() in ("1", "true", "yes")
+    # Quick check: try one well-known MTA with aggressive timeout
+    for host in ("gmail-smtp-in.l.google.com", "outlook-com.olc.protection.outlook.com"):
         try:
-            s = socket.create_connection((host, 25), timeout=1.5)
+            s = socket.create_connection((host, 25), timeout=0.8)
             s.close()
             return True
         except Exception:
