@@ -137,17 +137,14 @@ def resolve_mxs(domain, attempts=3):
     resolver hiccup must never be able to burn a real contact, so transient
     failures are retried and then reported as unknown.
     """
-    last = None
     for i in range(attempts):
         try:
-# Use custom resolver with aggressive timeouts for cloud environments
-    resolver = dns.resolver.Resolver()
-    resolver.lifetime = 2.0
-    resolver.timeout = 2.0
-    resolver.nameservers = ["8.8.8.8", "1.1.1.1"]  # Google + Cloudflare DNS
+            # Use custom resolver with aggressive timeouts for cloud environments
+            resolver = dns.resolver.Resolver()
+            resolver.lifetime = 2.0
+            resolver.timeout = 2.0
+            resolver.nameservers = ["8.8.8.8", "1.1.1.1"]  # Google + Cloudflare DNS
 
-    for i in range(attempts):
-        try:
             recs = resolver.resolve(domain, "MX")
             hosts = sorted(recs, key=lambda r: r.preference)
             mxs = []
