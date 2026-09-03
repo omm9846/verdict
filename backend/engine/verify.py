@@ -71,7 +71,6 @@ _EGRESS_TTL = 6 * 3600  # 6 hours
 
 # Allow environment override: EGRESS_SMTP_OPEN=false on known-blocked hosts
 # (e.g., Render) skips the probe entirely.
-import os
 _EGRESS_OVERRIDE = os.environ.get("EGRESS_SMTP_OPEN")
 
 
@@ -111,6 +110,43 @@ def _test_egress():
         except Exception:
             continue
     return False
+
+
+# Domains people fat-finger. A typosquat has real MX records, so no DNS signal
+# flags it; the near-miss is the only evidence available without a probe.
+COMMON_DOMAINS = (
+    "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com",
+    "yahoo.com", "icloud.com", "me.com", "aol.com", "protonmail.com",
+    "proton.me", "zoho.com", "gmx.com", "yandex.com", "fastmail.com",
+    "msn.com", "comcast.net", "verizon.net", "sbcglobal.net",
+)
+
+
+def _edit_distance(a, b, cap=2):
+    """Levenshtein, abandoned once it exceeds cap."""
+    if abs(len(a) - len(b)) > cap:
+        return cap + 1
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        if min(cur) > cap:
+            return cap + 1
+        prev = cur
+    return prev[-1]
+
+
+def suggest_domain(domain):
+    """Nearest common provider within two edits, if not already one."""
+    if domain in COMMON_DOMAINS:
+        return None
+    best, best_d = None, 3
+    for cand in COMMON_DOMAINS:
+        d = _edit_distance(domain, cand)
+        if d < best_d:
+            best, best_d = cand, d
+    return best if best_d <= 2 else None
 
 
 def _cache_get(store, key, ttl):
@@ -491,8 +527,12 @@ def _verify_uncached(email):
     # 3. Typo-squat detection on common providers
     typo = suggest_domain(domain)
     if typo:
-        return {"email": email, "verdict": "DEAD", "mx": None,
-                "detail": f"looks like typo of {typo}"}
+        # Not DEAD: the squatted domain accepts mail and we have not probed
+        # this mailbox. A DEAD verdict suppresses an address permanently, and
+        # a near-miss is suspicion, not evidence.
+        return {"email": email, "verdict": "RISKY", "mx": None,
+                "detail": f"looks like a typo of {typo}; mail here reaches a "
+                          f"squatter, not your recipient"}
 
     # Fast path: major consumer providers always validate at signup,
     # never do catch-all, but block external probes.

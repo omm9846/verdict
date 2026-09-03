@@ -28,7 +28,9 @@ import dns.resolver
 from engine.verify import (
     CONSUMER_PROVIDERS,
     ENTERPRISE_GATES,
+    COMMON_DOMAINS,
     resolve_mx,
+    suggest_domain,
 )
 
 SYNTAX_RE = re.compile(r"^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$")
@@ -52,42 +54,6 @@ DISPOSABLE_DOMAINS = {
     "spamgourmet.com", "mohmal.com", "tempr.email", "moakt.com",
     "burnermail.io", "anonaddy.com", "simplelogin.io", "33mail.com",
 }
-
-# Typo targets: the domains people actually fat-finger.
-COMMON_DOMAINS = (
-    "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com",
-    "yahoo.com", "icloud.com", "me.com", "aol.com", "protonmail.com",
-    "proton.me", "zoho.com", "gmx.com", "yandex.com", "fastmail.com",
-    "msn.com", "comcast.net", "verizon.net", "sbcglobal.net",
-)
-
-
-def _edit_distance(a: str, b: str, cap: int = 2) -> int:
-    """Levenshtein, abandoned once it exceeds cap."""
-    if abs(len(a) - len(b)) > cap:
-        return cap + 1
-    prev = list(range(len(b) + 1))
-    for i, ca in enumerate(a, 1):
-        cur = [i]
-        for j, cb in enumerate(b, 1):
-            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
-        if min(cur) > cap:
-            return cap + 1
-        prev = cur
-    return prev[-1]
-
-
-def suggest_domain(domain: str) -> str | None:
-    """Nearest common provider within two edits, if the domain isn't already one."""
-    if domain in COMMON_DOMAINS:
-        return None
-    best, best_d = None, 3
-    for cand in COMMON_DOMAINS:
-        d = _edit_distance(domain, cand)
-        if d < best_d:
-            best, best_d = cand, d
-    return best if best_d <= 2 else None
-
 
 def _txt(domain: str, prefix: str = "") -> list[str]:
     name = f"{prefix}{domain}" if prefix else domain

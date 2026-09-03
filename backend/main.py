@@ -1,5 +1,5 @@
 """Verdict API - verification gate + discovery for the dashboard."""
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from collections import Counter
@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from engine.verify import verify
 from engine.precheck import precheck
 from engine.domain_audit import audit_domain
+from engine import probe_queue
 from engine import discovery
 
 app = FastAPI(title="Verdict Engine", version="0.1.0")
@@ -119,10 +120,63 @@ def api_precheck(req: VerifyRequest):
     return precheck(req.email)
 
 
+class JobClaim(BaseModel):
+    limit: int = 5
+
+
+class JobResult(BaseModel):
+    id: str
+    result: dict
+
+
+@app.post("/api/probe-jobs/claim")
+def api_claim(req: JobClaim, x_worker_token: str = Header(default="")):
+    """A worker with port 25 open takes jobs the host cannot do itself."""
+    if not probe_queue.authorised(x_worker_token):
+        raise HTTPException(status_code=401, detail="worker token required")
+    return {"jobs": probe_queue.claim(min(max(req.limit, 1), 20))}
+
+
+@app.post("/api/probe-jobs/complete")
+def api_complete(req: JobResult, x_worker_token: str = Header(default="")):
+    if not probe_queue.authorised(x_worker_token):
+        raise HTTPException(status_code=401, detail="worker token required")
+    return {"ok": probe_queue.complete(req.id, req.result)}
+
+
+@app.get("/api/probe-jobs/status")
+def api_queue_status():
+    return probe_queue.stats()
+
+
 @app.post("/api/verify")
 def api_verify(req: VerifyRequest):
-    """SMTP-verify a single mailbox. Returns verdict + evidence."""
-    return verify(req.email)
+    """Verify a single mailbox.
+
+    Outbound port 25 is blocked here, so a real probe is only possible when a
+    worker is connected. With one, this returns a genuine SMTP verdict. With
+    none, it returns the DNS tier and says so, rather than reporting UNKNOWN
+    for every corporate address and letting the caller read that as a finding.
+    """
+    local = verify(req.email)
+    # The consumer fast path and DNS-only outcomes need no socket, so they are
+    # already correct here.
+    if local.get("verdict") != "UNKNOWN":
+        return {**local, "probed_by": "api"}
+
+    try:
+        job_id = probe_queue.submit(req.email)
+    except RuntimeError:
+        return {**precheck(req.email), "probed_by": "dns-tier",
+                "note": "probe queue full; DNS tier only"}
+
+    result = probe_queue.wait(job_id, timeout=20.0)
+    if result:
+        return {**result, "probed_by": "worker"}
+
+    return {**precheck(req.email), "probed_by": "dns-tier",
+            "note": "no probe worker connected; mailbox existence not "
+                    "established. Run the engine locally for a real probe."}
 
 
 @app.post("/api/discover")
