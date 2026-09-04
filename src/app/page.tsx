@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import Faq from "@/components/faq";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { VerdictChecker } from "@/components/verdict-checker";
+import { PricingCTA } from "@/components/pricing-cta";
 
 const STEPS = [
   {
@@ -35,35 +36,19 @@ const BENCHMARKS = [
 export default function Home() {
   return (
     <main className="min-h-screen">
-      {/* top ticker */}
-      {/* Launch banner. Sits above the utility bar so it reads first. */}
-      <a
-        href="https://www.producthunt.com/products/verdict-11"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block bg-stamp-live text-ink font-mono text-[12px] tracking-[0.12em] uppercase hover:brightness-95 transition-all"
-      >
-        <div className="max-w-6xl mx-auto px-6 py-2 flex items-center justify-center gap-3 text-center flex-wrap">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-ink animate-pulse" />
-          <span className="font-semibold">Launching on Product Hunt</span>
-          <span className="opacity-70">Tuesday 1 September</span>
-          <span className="underline underline-offset-2">Get notified &rarr;</span>
-        </div>
-      </a>
-
       <div className="bg-ink text-paper font-mono text-[11px] tracking-[0.18em] uppercase">
         <div className="max-w-6xl mx-auto px-6 py-1.5 flex justify-between">
           <span>open source · MIT</span>
           <span className="hidden sm:inline">your list never leaves your machine</span>
-          <span>no contact database</span>
         </div>
       </div>
 
       {/* nav */}
       <nav className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-        <span className="font-display font-black text-2xl tracking-tight">
-          VERDICT<span className="text-stamp-dead">.</span>
-        </span>
+<span className="font-display font-black text-2xl tracking-tight">
+            VERDICT<span className="text-stamp-dead">.</span>
+          </span>
+          <span className="hidden md:inline ml-4 text-sm font-mono text-stamp-live/80">make cold mailing great again</span>
         <div className="flex items-center gap-6 font-mono text-sm">
           <Link href="#how" className="hidden sm:inline hover:text-stamp-live transition-colors">how it works</Link>
           <Link href="#benchmarks" className="hidden sm:inline hover:text-stamp-live transition-colors">benchmarks</Link>
@@ -86,7 +71,7 @@ export default function Home() {
             every address stands trial
           </p>
           <h1 className="font-display font-black text-5xl sm:text-6xl xl:text-7xl leading-[1.02] tracking-tight">
-            Guilty until proven deliverable.
+            make cold mailing great again
           </h1>
           <p className="mt-7 text-lg text-ink-soft max-w-xl leading-relaxed">
             Verdict probes every mailbox over SMTP and refuses to send what will
@@ -113,21 +98,16 @@ export default function Home() {
               open a case — free, no signup
             </p>
             <VerdictChecker />
-            <div className="mt-8 max-w-md">
+            <div className="mt-8 max-w-md" id="waitlist">
               <p className="font-mono text-xs text-ink-faint mb-3">
                 want the full engine? join the waitlist:
               </p>
               <WaitlistForm />
             </div>
           </div>
-          <p className="mt-6 font-mono text-xs text-ink-faint">
+<p className="mt-6 font-mono text-xs text-ink-faint">
             case study inside: 72 fund managers touched · 24 dead mailboxes caught pre-send · ~2% bounce
           </p>
-          <div className="mt-8">
-            <a href="https://www.producthunt.com/products/verdict-11?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-verdict-11" target="_blank" rel="noopener noreferrer">
-              <img alt="Verdict - Emails that never bounce. | Product Hunt" width={250} height={54} src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1231863&amp;theme=light&amp;t=1787659374392" />
-            </a>
-          </div>
         </div>
 
         <div className="bg-card border border-rule p-6 shadow-[6px_6px_0_0_var(--color-rule)] mt-4">
@@ -234,8 +214,8 @@ export default function Home() {
         <div className="rule-double w-40 mb-12" />
         <div className="grid md:grid-cols-2 gap-8 max-w-3xl">
           {[
-            { name: "Open source", price: "$0", note: "forever", feats: ["The whole engine, MIT licensed", "Runs on your machine, so the SMTP probe is real", "Your list is never uploaded anywhere", "CLI, Python API and MCP server for agents"], cta: "Clone the repo" },
-            { name: "Hosted", price: "$59", note: "/mo", feats: ["Everything above, nothing to install", "Batch verification and discovery", "Domain audits with shareable reports", "API access for your own tooling", "Email support"], cta: "Get early access", featured: true },
+            { name: "Open source", price: "$0", note: "forever", feats: ["The whole engine, MIT licensed", "Runs on your machine, so the SMTP probe is real", "Your list is never uploaded anywhere", "CLI, Python API and MCP server for agents"], cta: "Clone the repo", href: "https://github.com/omm9846/verdict" },
+            { name: "Hosted", price: "$59", note: "/mo", feats: ["Everything above, nothing to install", "Batch verification and discovery", "Domain audits with shareable reports", "API access for your own tooling", "Email support"], cta: "Get early access", featured: true, paid: true },
           ].map((t) => (
             <div
               key={t.name}
@@ -259,15 +239,7 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <button
-                className={`mt-8 w-full py-3 font-mono text-sm border transition-colors ${
-                  t.featured
-                    ? "bg-paper text-ink border-paper hover:bg-stamp-live hover:text-paper hover:border-stamp-live"
-                    : "border-ink hover:bg-ink hover:text-paper"
-                }`}
-              >
-                {t.cta}
-              </button>
+              <PricingCTA label={t.cta} href={t.href} featured={t.featured} paid={t.paid} />
             </div>
           ))}
         </div>
