@@ -10,6 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/spoofable`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/clean`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${base}/bounce`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/privacy`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
+    { url: `${base}/terms`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/alternatives`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
     // "X alternative" is where people search with budget already in hand.
     ...ALTERNATIVES.map((a) => ({
@@ -29,6 +31,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/dashboard`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/brand`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/gallery`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
-    { url: `${base}/terms-of-service`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
   ];
 }

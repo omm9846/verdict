@@ -261,6 +261,8 @@ export default function Home() {
             <div><a href="https://github.com/omm9846/verdict" className="hover:text-paper">GitHub</a></div>
             <div><a href="/dashboard" className="hover:text-paper">Product</a></div>
             <div><a href="mailto:hello@tryverdict.org" className="hover:text-paper">hello@tryverdict.org</a></div>
+            <div><Link href="/privacy" className="hover:text-paper">Privacy</Link></div>
+            <div><Link href="/terms" className="hover:text-paper">Terms</Link></div>
           </div>
         </div>
         <div className="border-t border-paper/10 font-mono text-[11px] text-paper/40">
