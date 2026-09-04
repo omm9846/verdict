@@ -77,31 +77,64 @@ export async function POST(req: Request) {
   const type = event.type ?? "";
   const data = event.data ?? {};
 
-  // Only the events that mean money actually moved.
-  if (type === "payment.succeeded" || type === "subscription.active") {
-    const email = String(
-      (data.customer as Record<string, unknown> | undefined)?.email ??
-        data.email ??
-        ""
-    ).toLowerCase();
-    const ref = String(
-      (data.metadata as Record<string, unknown> | undefined)?.ref ?? ""
-    );
+  const email = String(
+    (data.customer as Record<string, unknown> | undefined)?.email ??
+      data.email ??
+      ""
+  ).toLowerCase();
+  const ref = String(
+    (data.metadata as Record<string, unknown> | undefined)?.ref ?? ""
+  );
 
-    console.log(`dodo ${type}: ${email || "unknown"}${ref ? ` via ref=${ref}` : ""}`);
-
-    // Record it, but never fail the webhook on a storage problem: Dodo retries
-    // on a non-2xx, and a retry storm over a logging failure is worse than a
-    // missing row we can reconcile from their dashboard.
-    void record(email, ref, type).catch((e) =>
-      console.error("dodo webhook record:", e?.message ?? e)
-    );
+  const status = STATUS_FOR[type];
+  if (!status) {
+    // Unsubscribed or unrecognised event. Acknowledge it so Dodo does not
+    // retry, but say so in the logs: silently discarding events is how you
+    // find out months later that access was never revoked.
+    console.log(`dodo ${type}: no handler, ignored`);
+    return NextResponse.json({ received: true, handled: false });
   }
 
-  return NextResponse.json({ received: true });
+  console.log(
+    `dodo ${type} -> ${status}: ${email || "unknown"}${ref ? ` ref=${ref}` : ""}`
+  );
+
+  // Never fail the webhook on a storage problem: Dodo retries on non-2xx, and
+  // a retry storm over a logging failure is worse than a row we can reconcile
+  // from their dashboard.
+  void record(email, ref, type, status).catch((e) =>
+    console.error("dodo webhook record:", e?.message ?? e)
+  );
+
+  return NextResponse.json({ received: true, handled: true });
 }
 
-async function record(email: string, ref: string, type: string) {
+// Access is a consequence of the event, not of the event being a payment.
+// Mapping explicitly means a cancellation revokes rather than being ignored,
+// which is the failure mode of only handling the happy path.
+const STATUS_FOR: Record<string, "active" | "revoked" | "attention"> = {
+  "payment.succeeded": "active",
+  "subscription.active": "active",
+  "subscription.renewed": "active",
+  "subscription.unpaused": "active",
+
+  "subscription.cancelled": "revoked",
+  "subscription.expired": "revoked",
+  "subscription.failed": "revoked",
+
+  // Dunning: payment is failing but the subscription is not dead yet. Worth
+  // an email to the customer rather than cutting them off.
+  "payment.failed": "attention",
+  "subscription.on_hold": "attention",
+  "subscription.paused": "attention",
+};
+
+async function record(
+  email: string,
+  ref: string,
+  type: string,
+  status: string
+) {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key || !email) return;
@@ -109,7 +142,7 @@ async function record(email: string, ref: string, type: string) {
   const supabase = createClient(url, key);
   const { error } = await supabase
     .from("customers")
-    .insert({ email, ref: ref || null, event: type });
+    .insert({ email, ref: ref || null, event: type, status });
 
   // The table may not exist yet. Log it rather than throwing, so a first sale
   // is never lost to a missing migration.
