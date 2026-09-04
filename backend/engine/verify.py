@@ -446,17 +446,19 @@ def _probe_port(mx, email, port=587, timeout=10):
 
 
 def resolve_unknown(email, domain, mx, mxs, primary_detail):
-    """Push an UNKNOWN through the grey area to a more useful verdict.
+    """Try harder on an UNKNOWN, without ever inventing a verdict.
 
-    Order of attack:
-      1. Probe a secondary MX host directly (fresh egress path, may not be blocked).
-      2. Probe on port 587 / STARTTLS (some MTAs only block 25).
-      3. Weight DNS evidence (real MX + SPF + DMARC + corporate + not disposable).
-    Only the DNS-evidence path can flip UNKNOWN -> SEND, and only when the
-    evidence is overwhelming; anything less stays UNKNOWN (honest, documented
-    in the dev benchmark, not claimed in the UI).
+    Only a real RCPT TO can produce SEND or DEAD. A secondary MX host is worth
+    trying because it may sit on a different egress path, but that is still a
+    probe. DNS evidence is not: a domain with MX, SPF and DMARC tells you the
+    domain accepts mail, and says nothing whatsoever about whether one mailbox
+    on it exists.
+
+    An earlier version returned SEND on strong DNS signals alone. That is the
+    precise behaviour this product exists to argue against, and it is worse
+    coming from us than from anyone else, because our whole claim is that we
+    only report what a server actually said.
     """
-    # 1 & 2: alternate probe paths (fast, bounded best-effort)
     for host in mxs:
         if host == mx:
             continue
@@ -465,29 +467,23 @@ def resolve_unknown(email, domain, mx, mxs, primary_detail):
             return {"email": email, "verdict": "SEND", "mx": host,
                     "detail": "confirmed via secondary MX host"}
         if code in (550, 551, 553):
-            kind = classify_rejection(detail)
-            if kind == "recipient":
+            if classify_rejection(detail) == "recipient":
                 return {"email": email, "verdict": "DEAD", "mx": host,
                         "detail": "secondary MX says no such user"}
-    code, detail = _probe_port(mx, email, timeout=6)
-    if code in (250, 251):
-        return {"email": email, "verdict": "SEND", "mx": mx,
-                "detail": "confirmed via port 587"}
-    if code in (550, 551, 553):
-        kind = classify_rejection(detail)
-        if kind == "recipient":
-            return {"email": email, "verdict": "DEAD", "mx": mx,
-                    "detail": "no such user via port 587"}
 
-    # 3: DNS evidence fallback. Be conservative: only flip to SEND when the
-    # domain is conclusively corporate + mail-accepting + authenticated.
+    # Ports 587 and 465 were tried here. They cannot work: MX hosts listen on
+    # 25 for inbound mail, while 587/465 belong to submission servers on
+    # different hostnames entirely. Every attempt timed out, costing six
+    # seconds per lookup for a path that has no success case.
+
     score, signals = _dns_send_evidence(domain)
-    gate = any(g in (mx or "").lower() for g in ENTERPRISE_GATES)
-    if score >= 4 and not gate:
-        return {"email": email, "verdict": "SEND", "mx": mx,
-                "detail": f"strong domain signals ({', '.join(signals[:3])}); "
-                          f"probe blocked ({primary_detail[:30]})"}
+    if score >= 4 and not any(g in (mx or "").lower() for g in ENTERPRISE_GATES):
+        return {"email": email, "verdict": "PLAUSIBLE", "mx": mx,
+                "smtp_probed": False,
+                "detail": f"domain accepts mail ({', '.join(signals[:3])}), but "
+                          f"this mailbox was never probed: {primary_detail[:40]}"}
     return {"email": email, "verdict": "UNKNOWN", "mx": mx,
+            "smtp_probed": False,
             "detail": f"could not confirm: {primary_detail[:60]}"}
 
 
@@ -561,16 +557,24 @@ def _verify_uncached(email):
             return {"email": email, "verdict": "RISKY", "mx": mx, "detail": ddetail}
         if dverdict == "CATCHALL":
             return {"email": email, "verdict": "CATCHALL", "mx": mx, "detail": ddetail}
-        # egress blocked: fall back to DNS evidence
+        # Egress is blocked, so no mailbox on this domain can be probed at
+        # all. DNS evidence describes the domain, never the mailbox: MX, SPF
+        # and DMARC are identical for a live address and a nonexistent one at
+        # the same company. Returning SEND here reported a verdict for an
+        # address that was never contacted, and did so for known-dead
+        # addresses too, which is the failure this product exists to name.
         score, signals = _dns_send_evidence(domain)
         gate = any(g in (mx or "").lower() for g in ENTERPRISE_GATES)
         mxs, _ = resolve_mxs(domain)
         mx = mxs[0] if mxs else None
         if score >= 4 and not gate:
-            return {"email": email, "verdict": "SEND", "mx": mx,
-                    "detail": f"strong domain signals ({', '.join(signals[:3])}); egress blocked"}
+            return {"email": email, "verdict": "PLAUSIBLE", "mx": mx,
+                    "smtp_probed": False,
+                    "detail": f"domain accepts mail ({', '.join(signals[:2])}), "
+                              f"but no probe was possible from this host"}
         return {"email": email, "verdict": "UNKNOWN", "mx": mx,
-                "detail": f"egress blocked; could not confirm via SMTP"}
+                "smtp_probed": False,
+                "detail": "no SMTP probe possible from this host"}
 
     dverdict, mx, ddetail = classify_domain(domain)
     if dverdict == "DNSFAIL":
