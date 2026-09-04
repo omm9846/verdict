@@ -140,11 +140,29 @@ async function record(
   if (!url || !key || !email) return;
 
   const supabase = createClient(url, key);
+
+  // Billing history: one row per event, so a replayed or out-of-order
+  // delivery cannot silently rewrite what happened.
   const { error } = await supabase
     .from("customers")
     .insert({ email, ref: ref || null, event: type, status });
-
-  // The table may not exist yet. Log it rather than throwing, so a first sale
-  // is never lost to a missing migration.
   if (error) console.error("customers insert:", error.message);
+
+  if (status === "attention") return; // dunning is not a plan change
+
+  const plan = status === "active" ? "pro" : "free";
+
+  // The address on the payment may not be one that has signed in yet, so the
+  // profile is created rather than only updated. Otherwise someone pays, signs
+  // in for the first time afterwards, and lands on the free plan they just
+  // paid to leave.
+  const { error: planError } = await supabase
+    .from("profiles")
+    .upsert({ email, plan }, { onConflict: "email" });
+
+  if (planError) {
+    console.error(`plan update failed for ${email}:`, planError.message);
+    return;
+  }
+  console.log(`plan set to ${plan} for ${email}`);
 }
