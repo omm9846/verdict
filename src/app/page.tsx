@@ -80,17 +80,17 @@ export default function Home() {
             uploaded anywhere. Not even to us.
           </p>
           <div className="mt-9 flex flex-wrap gap-4 items-center">
-            <a
-              href="https://github.com/omm9846/verdict"
+            <Link
+              href="/login"
               className="bg-ink text-paper font-mono text-sm px-6 py-3.5 hover:bg-stamp-live transition-colors"
             >
-              ★ Star on GitHub
-            </a>
+              Sign in →
+            </Link>
             <Link
-              href="/dashboard"
+              href="/clean"
               className="border border-ink font-mono text-sm px-6 py-3.5 hover:bg-card transition-colors"
             >
-              See the interface →
+              Check a list free
             </Link>
           </div>
           <div className="mt-10 max-w-2xl">
