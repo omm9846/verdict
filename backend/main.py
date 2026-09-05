@@ -115,9 +115,11 @@ def api_batch(req: BatchRequest):
 def api_precheck(req: VerifyRequest):
     """DNS-tier check. Runs anywhere, including hosts that block port 25.
     Catches malformed addresses, dead domains, burners and typos for certain;
-    cannot confirm a mailbox exists. That needs /api/verify on a host with
-    outbound SMTP."""
-    return precheck(req.email)
+    cannot confirm a mailbox exists on its own. Where a mailbox cannot be
+    probed it also tries the HTTPS grey-area signals, which can confirm an
+    address is real (never that it is dead) without needing port 25."""
+    from engine.verify import _add_soft_signal
+    return _add_soft_signal(precheck(req.email), req.email)
 
 
 class JobClaim(BaseModel):

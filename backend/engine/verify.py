@@ -487,15 +487,46 @@ def resolve_unknown(email, domain, mx, mxs, primary_detail):
             "detail": f"could not confirm: {primary_detail[:60]}"}
 
 
+def _add_soft_signal(result, email):
+    """When a mailbox could not be probed, try the HTTP grey-area signals.
+
+    Only runs on PLAUSIBLE and UNKNOWN, i.e. exactly the cases where port 25
+    was unavailable and the domain, not the mailbox, is all we know. The signal
+    is positive-only by construction (see engine/soft_signals): it can confirm
+    a mailbox is real, never that it is dead, so it can lift confidence but can
+    never manufacture a false DEAD.
+    """
+    if result.get("verdict") not in ("PLAUSIBLE", "UNKNOWN"):
+        return result
+    if result.get("smtp_probed"):
+        return result
+    try:
+        from engine.soft_signals import gather
+        sig = gather(email, result.get("mx"))
+    except Exception:
+        return result
+    if sig.get("signal") == "real":
+        result["mailbox_confirmed"] = True
+        result["confirmed_by"] = sig.get("source", "")
+        # Kept distinct from a SEND verdict on purpose: SEND means a mail server
+        # answered RCPT, this means a provider's own API vouches for the
+        # address over HTTPS. Both are real; they are not the same witness.
+        result["detail"] = (f"{sig.get('detail', 'mailbox confirmed real')} "
+                            f"(no port-25 probe was possible, so this is an "
+                            f"HTTPS confirmation, not an SMTP one)")
+    return result
+
+
 def verify(email):
     key = email.strip().lower()
     cached = _cache_get(_email_cache, key, _EMAIL_TTL)
     if cached is not None:
         return cached
-    result = _verify_uncached(email)
+    result = _add_soft_signal(_verify_uncached(email), email)
     # Don't cache UNKNOWN: it usually means our probe IP was blocked, which is
-    # transient. Caching it would pin a bad answer for an hour.
-    if result.get("verdict") != "UNKNOWN":
+    # transient. Caching it would pin a bad answer for an hour. A confirmed
+    # mailbox is not transient, though, so cache that even under UNKNOWN.
+    if result.get("verdict") != "UNKNOWN" or result.get("mailbox_confirmed"):
         _cache_put(_email_cache, key, result)
     return result
 

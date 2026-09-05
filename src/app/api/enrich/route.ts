@@ -135,6 +135,8 @@ export async function POST(req: Request) {
     mx?: string | null;
     suggestion?: string;
     checks?: Check[];
+    mailbox_confirmed?: boolean;
+    confirmed_by?: string;
   };
 
   try {
@@ -182,10 +184,19 @@ export async function POST(req: Request) {
       // Stated in the payload rather than only in the docs, so nobody builds a
       // workflow believing a mailbox was contacted when it was not.
       smtp_probed: false,
+
+      // The grey-area win: some un-probed mailboxes can still be confirmed
+      // real over HTTPS (a Gravatar on the address, or the provider's own
+      // existence API). Positive-only, so this is never false when true, and
+      // its absence is not evidence the mailbox is dead.
+      mailbox_confirmed_real: data.mailbox_confirmed === true,
+      confirmed_by: data.confirmed_by ?? "",
+
       note:
-        "DNS tier. Confirms whether the domain can receive mail, catches typos "
-        + "and burner domains. Confirming a specific mailbox needs an SMTP probe "
-        + "on port 25, which no cloud host permits.",
+        "DNS tier plus HTTPS existence signals. Confirms whether the domain "
+        + "can receive mail, catches typos and burner domains, and where "
+        + "possible confirms the mailbox itself without port 25. A mailbox that "
+        + "is not confirmed is not thereby dead - only definitely_dead is a no.",
 
       plan: access.kind === "key" ? access.plan : "trial",
       remaining_today: remaining,

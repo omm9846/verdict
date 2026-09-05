@@ -20,6 +20,8 @@ const FIELDS: [string, string][] = [
   ["verdict", "DEAD, RISKY, PLAUSIBLE or UNKNOWN"],
   ["sendable", "false only when the address is definitely dead"],
   ["definitely_dead", "the domain cannot receive mail at all"],
+  ["mailbox_confirmed_real", "the mailbox itself was confirmed over HTTPS (no port 25 needed)"],
+  ["confirmed_by", "what confirmed it: gravatar or microsoft365"],
   ["reason", "why, in a sentence"],
   ["looks_like_typo", "one character from a real provider"],
   ["did_you_mean", "the address it was probably meant to be"],
@@ -183,6 +185,15 @@ https://tryverdict.org/api/enrich
           worth acting on immediately. A typosquatted domain has perfectly valid
           DNS, so every other signal says it is fine, while the mail goes to
           someone who registered the misspelling on purpose.
+        </p>
+        <p className="text-ink-soft leading-relaxed mt-4">
+          <code className="font-mono text-sm">mailbox_confirmed_real</code> is
+          the opposite end: when it is true, the mailbox itself was confirmed,
+          not just the domain, over HTTPS without a port-25 probe (the person
+          has a Gravatar on the address, or the provider&rsquo;s own API vouches
+          for it). Treat those as your safest rows. It is confirmation-only, so
+          a false here just means &ldquo;not confirmed&rdquo;, never
+          &ldquo;dead&rdquo;.
         </p>
 
         <div className="mt-12 border-2 border-ink bg-card p-7">
