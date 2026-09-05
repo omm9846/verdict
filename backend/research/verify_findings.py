@@ -65,7 +65,7 @@ def still_published(addr: str, evidence: str) -> tuple[bool, str]:
     """Is the address still on the page we took it from?"""
     if not evidence.startswith("http"):
         # Guessed front-desk address, never scraped from a page. It cannot be
-        # 'still published' because it was never published — that is a weaker
+        # 'still published' because it was never published - that is a weaker
         # claim and must be labelled as such.
         return False, "not scraped from a page (guessed address)"
     _, html = fetch(evidence)
@@ -111,7 +111,7 @@ def assess(pack: dict) -> dict:
     elif out["live_alternatives"]:
         out["verdict"] = "WEAK"
         out["why"] = (f"published address is dead, but "
-                      f"{', '.join(out['live_alternatives'][:3])} answers — "
+                      f"{', '.join(out['live_alternatives'][:3])} answers - "
                       f"the page is stale, the company is reachable")
     else:
         out["verdict"] = "PUBLISHABLE"
@@ -154,7 +154,7 @@ def main():
         rows = [r for r in results if r["verdict"] == tier]
         print(f"\n{'=' * 70}\n{tier}  ({len(rows)})\n{'=' * 70}")
         for r in rows:
-            print(f"\n{r['domain']}  — {r['why']}")
+            print(f"\n{r['domain']} - {r['why']}")
             for c in r["confirmed"]:
                 print(f"    DEAD  {c['email']:<34} {c['reprobe'][:44]}")
                 print(f"          {c['where']}")
@@ -165,7 +165,7 @@ def main():
           f"{sum(1 for r in results if r['verdict']=='WEAK')} weak, "
           f"{sum(1 for r in results if r['verdict']=='DROP')} drop")
     print("\nOnly PUBLISHABLE belongs in a headline. WEAK is still worth telling")
-    print("the company privately — it is their page that is wrong, not their mail.")
+    print("the company privately - it is their page that is wrong, not their mail.")
 
 
 if __name__ == "__main__":

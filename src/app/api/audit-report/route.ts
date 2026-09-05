@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     body: JSON.stringify({
       from,
       to: email,
-      subject: `${audit.domain} — deliverability audit (${audit.grade}, ${audit.score}/100)`,
+      subject: `${audit.domain} deliverability audit (${audit.grade}, ${audit.score}/100)`,
       text: renderReport(audit),
       headers: {
         "List-Unsubscribe": "<mailto:hello@tryverdict.org?subject=unsubscribe>",
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
     console.error("audit lead store:", e?.message ?? e)
   );
 
-  return NextResponse.json({ ok: true, message: "sent — check your inbox." });
+  return NextResponse.json({ ok: true, message: "sent. check your inbox." });
 }
 
 async function storeLead(email: string, audit: Audit) {
@@ -113,7 +113,7 @@ async function storeLead(email: string, audit: Audit) {
 
 function renderReport(audit: Audit): string {
   const lines: string[] = [];
-  lines.push(`Deliverability audit — ${audit.domain}`);
+  lines.push(`Deliverability audit: ${audit.domain}`);
   lines.push("");
   lines.push(`Grade: ${audit.grade}  (${audit.score}/100)`);
   lines.push(audit.headline ?? "");
@@ -137,7 +137,7 @@ function renderReport(audit: Audit): string {
   lines.push("");
   lines.push("Why this matters: DMARC decides whether someone else can send");
   lines.push("mail as you. SPF and DKIM decide whether your own mail is");
-  lines.push("trusted. All three are DNS records — no software to install.");
+  lines.push("trusted. All three are DNS records, no software to install.");
   lines.push("");
   lines.push("This audit reads public DNS only. It cannot tell you whether an");
   lines.push("individual mailbox exists; that needs an SMTP probe, and no");

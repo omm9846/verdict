@@ -10,7 +10,7 @@ rather than at customers. Two jobs:
 
 The pitch offers an exclusive because that is what makes an editor pick one
 story out of the fifty in the inbox that morning. Send them one at a time,
-in tiers — an exclusive offered to twenty people is not an exclusive.
+in tiers - an exclusive offered to twenty people is not an exclusive.
 """
 from __future__ import annotations
 
@@ -102,7 +102,7 @@ def draft_pitch(outlet: str, stats: dict, exclusive: bool) -> str:
     vlist = ", ".join(d for d, _ in verifiers) or "several"
     nver = len(verifiers)
 
-    excl = ("\n\nHappy to give it to you exclusively — I have not sent the data "
+    excl = ("\n\nHappy to give it to you exclusively - I have not sent the data "
             "to anyone else, and I will hold it until you have had a look."
             if exclusive else "")
 
@@ -111,8 +111,8 @@ def draft_pitch(outlet: str, stats: dict, exclusive: bool) -> str:
 Hi{' ' + outlet if outlet else ''},
 
 I run an open-source SMTP verification engine. I pointed it at 80 companies
-whose business is email — outreach platforms, contact-data vendors,
-deliverability tools — and probed the public contact addresses on their own
+whose business is email - outreach platforms, contact-data vendors,
+deliverability tools - and probed the public contact addresses on their own
 domains.
 
 {stats['dead']} of the 80 have at least one mailbox that hard-bounces.
@@ -123,7 +123,7 @@ published addresses. Companies whose product is telling you whether a mailbox
 exists, with mailboxes that do not.
 
 A further {stats['catchall']} run catch-all domains, meaning they accept any
-address at all — including a random 22-character one I invented — so nobody
+address at all - including a random 22-character one I invented - so nobody
 can verify an individual mailbox on them. Including, in several cases, the
 verifier they sell.
 
@@ -152,7 +152,7 @@ def render(pack: dict, stats: dict, exclusive: bool) -> str:
     dead = [a for a in pack["addresses"] if a.get("confirmed_dead")]
     unknown = [a for a in pack["addresses"] if a.get("verdict") == "UNKNOWN"]
 
-    lines = [f"# {d} — pitch pack", "",
+    lines = [f"# {d} - pitch pack", "",
              f"- mail server: `{pack['mx'] or 'none'}`",
              f"- checked: {pack['collected_at']}", ""]
     for n in pack["notes"]:
@@ -164,28 +164,28 @@ def render(pack: dict, stats: dict, exclusive: bool) -> str:
         lines.append("## Send to (verified live)")
         lines.append("")
         for a in live:
-            lines.append(f"- **{a['email']}** — {str(a.get('detail',''))[:60]}")
+            lines.append(f"- **{a['email']}** - {str(a.get('detail',''))[:60]}")
         lines.append("")
     else:
         lines.append("## No address verified live")
         lines.append("")
-        lines.append("Find a named journalist instead — a masthead or a byline "
+        lines.append("Find a named journalist instead - a masthead or a byline "
                      "beats a desk address, and this story wants a person who "
                      "covers the beat.")
         lines.append("")
 
     if unknown:
         lines.append(f"<details><summary>{len(unknown)} unverifiable "
-                     f"(server refused the probe — may still be fine)</summary>")
+                     f"(server refused the probe - may still be fine)</summary>")
         lines.append("")
         for a in unknown:
-            lines.append(f"- `{a['email']}` — {str(a.get('detail',''))[:70]}")
+            lines.append(f"- `{a['email']}` - {str(a.get('detail',''))[:70]}")
         lines.append("")
         lines.append("</details>")
         lines.append("")
 
     if dead:
-        lines.append("**Do not use — confirmed dead:**")
+        lines.append("**Do not use - confirmed dead:**")
         for a in dead:
             lines.append(f"- ~~{a['email']}~~ {str(a.get('detail',''))[:50]}")
         lines.append("")
@@ -230,7 +230,7 @@ def main():
     print(f"\n{len(summary)} pitch packs -> {a.out}/\n")
     print(f"{'outlet':<24} {'catchall':>9}  verified live address")
     for d, live, ca in sorted(summary, key=lambda r: (not r[1], r[0])):
-        print(f"{d:<24} {str(ca):>9}  {live[0] if live else '— none, find a byline'}")
+        print(f"{d:<24} {str(ca):>9}  {live[0] if live else ' - none, find a byline'}")
     good = [r for r in summary if r[1]]
     print(f"\n{len(good)} of {len(summary)} have a verified live contact.")
 

@@ -7,8 +7,8 @@ boxes, because losing one is visible immediately.
 Named individuals are the opposite. An executive leaves, IT deletes the
 mailbox, and the investor-relations page listing them stays up for years. Same
 after an acquisition or a rebrand. So this crawls the pages where companies
-publish a specific person — investor relations, press, governance, leadership
-— and probes only the addresses that look like a person rather than a desk.
+publish a specific person - investor relations, press, governance, leadership
+ - and probes only the addresses that look like a person rather than a desk.
 
 What makes a finding here worth reporting is the pairing: the page names a
 role ("Chief Financial Officer", "Head of Investor Relations") next to an
@@ -239,7 +239,7 @@ def report(path):
         counts[r.get("verdict", "?")] = counts.get(r.get("verdict", "?"), 0) + 1
 
     print(f"""
-NAMED-CONTACT AUDIT — {path}
+NAMED-CONTACT AUDIT - {path}
 {'=' * 66}
 Companies crawled                 {len(domains)}
 Named individual addresses found  {len(named)}

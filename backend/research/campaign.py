@@ -156,7 +156,7 @@ def main() -> int:
         return 0
 
     tpl = TEMPLATES[a.template]
-    print(f"\n{'SENDING' if a.send else 'DRY RUN'} — {len(ready)} message(s), "
+    print(f"\n{'SENDING' if a.send else 'DRY RUN'} - {len(ready)} message(s), "
           f"template '{a.template}'\n")
 
     if not a.send:

@@ -79,7 +79,7 @@ def egress_smtp_open():
 
     Returns True if we can open an SMTP connection to a well-known MTA within
     2 seconds. Cloud hosts (Render, Vercel, AWS, GCP, Azure) block egress on
-    port 25, so probing is futile — better to skip straight to DNS evidence.
+    port 25, so probing is futile - better to skip straight to DNS evidence.
     """
     now = time.time()
     with _cache_lock:
@@ -96,7 +96,7 @@ def _test_egress():
     override = _EGRESS_OVERRIDE
     if override is not None:
         return override.lower() in ("1", "true", "yes")
-    # Detect known cloud providers that block port 25 — skip probe entirely
+    # Detect known cloud providers that block port 25 - skip probe entirely
     if os.environ.get("RENDER") or os.environ.get("VERCEL") or \
        os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("AWS_REGION") or \
        os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get("AZURE_CLIENT_ID"):
@@ -168,8 +168,8 @@ def resolve_mxs(domain, attempts=3):
     """Resolve ALL mail exchangers, ordered by preference. Returns (mxs, status).
 
     status is one of:
-      "ok"      - mxs is a non-empty list of hosts to probe
-      "nomx"    - the domain definitively cannot receive mail
+      "ok" - mxs is a non-empty list of hosts to probe
+      "nomx" - the domain definitively cannot receive mail
       "dnsfail" - we could not find out. NOT the same as "no mailserver".
 
     Returning every host (not just the first) matters: a domain can list two
@@ -262,7 +262,7 @@ def _rcpt(mx, email, timeout=12, retries=0):
             detail = msg.decode(errors="replace") if isinstance(msg, bytes) else str(msg)
             low = detail.lower()
             # Greylist / transient: 451, or the phrase says try again later.
-            # The mailbox may be perfectly fine — do not burn it as DEAD.
+            # The mailbox may be perfectly fine - do not burn it as DEAD.
             if code == 451 or "try again" in low or "greylist" in low or "temporary" in low:
                 if attempt < retries:
                     time.sleep(2 + attempt)
@@ -290,7 +290,7 @@ def _probe_multi(mxs, email, retries=1):
             return code, detail
         if code in (550, 551, 553):
             # Only accept a recipient-level rejection as definitive if it's not
-            # a probe-block / policy refusal — those say nothing about the user.
+            # a probe-block / policy refusal - those say nothing about the user.
             low = (detail or "").lower()
             if not any(s in low for s in ("client host", "listed by", "blocked",
                                           "access denied", "policy")):
@@ -330,7 +330,7 @@ def _classify_domain_uncached(domain):
 
 
 # RFC 3463 enhanced status codes. A 5xx on RCPT TO does not mean "no such
-# mailbox" — it means the server said no, and the reason matters enormously.
+# mailbox" - it means the server said no, and the reason matters enormously.
 # DEAD suppresses an address permanently, so it is reserved for the codes that
 # actually name the recipient as the problem.
 _ENHANCED_RE = re.compile(r"(?<![0-9.])([245])\.([0-9]{1,3})\.([0-9]{1,3})(?![0-9.])")
@@ -361,7 +361,7 @@ _POLICY_PHRASES = (
 def classify_rejection(detail):
     """Why did the server say no? Returns "recipient", "policy" or "unclear".
 
-    Enhanced status code wins when present — it is machine-readable and
+    Enhanced status code wins when present - it is machine-readable and
     unambiguous. Otherwise fall back to the human text, and when neither is
     conclusive say so rather than guessing, because guessing wrong in the
     DEAD direction is unrecoverable.

@@ -3,12 +3,12 @@
 The pitch that works on a stranger is not "try my product", it is "here is
 something true about you that you did not know, which cost me an hour and
 costs you nothing". This produces exactly that, one file per target, from
-public data only — no list from them, nothing to trust us with.
+public data only - no list from them, nothing to trust us with.
 
 For each target domain it reports what its own public contact surface does
 under a real SMTP probe: which published addresses are live, which are dead,
-which sit on a catch-all domain where nobody — including whatever verifier
-they sell or use — can tell.
+which sit on a catch-all domain where nobody - including whatever verifier
+they sell or use - can tell.
 
 Usage:
     python -m research.outreach_pack --domains ring1.txt --out packs/
@@ -97,7 +97,7 @@ def draft_email(pack: dict, company: str) -> str:
 
     opener = (
         f"We just built an open-source cold-outreach engine and I was stress-"
-        f"testing the verification gate on companies that sell email tooling — "
+        f"testing the verification gate on companies that sell email tooling - "
         f"on the theory that you'd be the harshest thing to point it at.\n\n"
         f"{who} came back with something you probably want to know."
     )
@@ -117,7 +117,7 @@ def draft_email(pack: dict, company: str) -> str:
                    if len(dead) > 1 else f"a dead address on {d}")
 
     elif pack["catchall"]:
-        body = (f"{d} is catch-all — it accepted a random 22-character mailbox "
+        body = (f"{d} is catch-all - it accepted a random 22-character mailbox "
                 f"I invented on the spot. That means no verifier can confirm "
                 f"any individual address on it, including ours, and including "
                 f"whatever you're using.")
@@ -128,17 +128,17 @@ def draft_email(pack: dict, company: str) -> str:
     elif live:
         body = (f"Nothing wrong. All {len(live)} public addresses on {d} are "
                 f"live and answering cleanly, which is rarer than it should be "
-                f"— most of the companies I ran this against had at least one "
+                f" - most of the companies I ran this against had at least one "
                 f"dead mailbox.")
         tail = "Nothing for you to do. Filing you under the good examples."
-        subject = f"{d} — clean, which was the surprise"
+        subject = f"{d} - clean, which was the surprise"
 
     else:
-        body = (f"Ran the public addresses on {d} and got nothing conclusive — "
+        body = (f"Ran the public addresses on {d} and got nothing conclusive - "
                 f"your mail server refuses automated probes, which is its "
                 f"right and frankly the correct posture.")
         tail = "No finding, then. Filing it as a well-configured server."
-        subject = f"{d} — your mail server refused my probe (correctly)"
+        subject = f"{d} - your mail server refused my probe (correctly)"
 
     return f"""Subject: {subject}
 
@@ -153,7 +153,7 @@ Hi{' ' + company if company else ' there'},
 The engine is MIT and runs locally, so you can check my working or point it
 at anything yourself: https://github.com/omm9846/verdict
 
-Not selling you anything — genuinely just what fell out of the test.
+Not selling you anything - genuinely just what fell out of the test.
 
 - Om
   hello@tryverdict.org
@@ -161,7 +161,7 @@ Not selling you anything — genuinely just what fell out of the test.
 
 
 def render(pack: dict, company: str) -> str:
-    lines = [f"# {company or pack['domain']} — contact audit",
+    lines = [f"# {company or pack['domain']} - contact audit",
              "", f"- domain: `{pack['domain']}`",
              f"- mail server: `{pack['mx'] or 'none'}`",
              f"- collected: {pack['collected_at']}", ""]
@@ -229,7 +229,7 @@ def main():
     for d, c, dead, ca, n in sorted(summary, key=lambda r: -r[2]):
         print(f"{d:<28} {c[:20]:<20} {dead:>4} {str(ca):>9} {n:>7}")
     hot = [r for r in summary if r[2] > 0]
-    print(f"\n{len(hot)} targets have at least one dead address — send those first.")
+    print(f"\n{len(hot)} targets have at least one dead address - send those first.")
 
 
 if __name__ == "__main__":

@@ -2,18 +2,18 @@
 
 Everything that can be established about an address without opening an SMTP
 connection. This exists because outbound port 25 is blocked on essentially
-every cloud host — Render, Vercel, AWS, GCP, Azure, Fly, Heroku — so the
+every cloud host - Render, Vercel, AWS, GCP, Azure, Fly, Heroku - so the
 hosted service cannot probe mailboxes and must not pretend otherwise.
 
 What this catches for certain:
-  - malformed addresses
-  - domains that do not resolve at all
-  - domains that resolve but refuse mail (no MX, no A, or RFC 7505 null MX)
-  - disposable / burner domains
-  - near-miss typos of large providers
+ - malformed addresses
+ - domains that do not resolve at all
+ - domains that resolve but refuse mail (no MX, no A, or RFC 7505 null MX)
+ - disposable / burner domains
+ - near-miss typos of large providers
 
 What it cannot catch, ever:
-  - whether a specific mailbox exists on a live domain
+ - whether a specific mailbox exists on a live domain
 
 That last one is the whole point of the product, and it needs a real SMTP
 probe. The honest split is: this runs anywhere, verify.py runs where port 25
@@ -68,12 +68,12 @@ def precheck(email: str) -> dict:
     """DNS-tier verdict.
 
     verdict is one of:
-      DEAD      - cannot receive mail, established without an SMTP probe
-      RISKY     - reachable but the mailbox is behind a gateway, disposable,
+      DEAD - cannot receive mail, established without an SMTP probe
+      RISKY - reachable but the mailbox is behind a gateway, disposable,
                   or a shared role account
       PLAUSIBLE - the domain accepts mail; whether this mailbox exists is
                   unknown from DNS alone and needs the SMTP gate
-      UNKNOWN   - DNS did not answer; no evidence either way
+      UNKNOWN - DNS did not answer; no evidence either way
     """
     email = (email or "").strip()
     out: dict = {
@@ -144,7 +144,7 @@ def precheck(email: str) -> dict:
         # signal says "fine". Near-miss on a major provider is the strongest
         # thing we can say without a probe, so it outranks the rest.
         return {**out, "verdict": "RISKY",
-                "detail": f"looks like a typo of {typo} — mail here reaches a "
+                "detail": f"looks like a typo of {typo} - mail here reaches a "
                           f"squatter, not your recipient"}
     if gate:
         return {**out, "verdict": "RISKY",

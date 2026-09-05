@@ -7,7 +7,7 @@ tool nobody uses.
 
 Running it locally is not a convenience, it is the only way this works.
 Confirming a mailbox needs an SMTP conversation on port 25, and every major
-cloud provider blocks outbound 25 — so a hosted verifier can only infer. On
+cloud provider blocks outbound 25 - so a hosted verifier can only infer. On
 your own machine the probe is real, and your contact list never leaves it.
 
 Add to Claude Desktop or Claude Code:
@@ -62,7 +62,7 @@ TOOLS = [
             "disposable domains, whether the domain accepts mail at all, role "
             "accounts, filtering gateways, SPF and DMARC presence. Works "
             "anywhere, including hosts that block port 25. Cannot confirm a "
-            "mailbox exists — use verify_email for that."
+            "mailbox exists - use verify_email for that."
         ),
         "inputSchema": {
             "type": "object",

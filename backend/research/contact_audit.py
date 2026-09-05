@@ -6,10 +6,10 @@ people are *entitled* to reach them at, does that mailbox actually exist?
 Three classes of address, kept strictly separate because they carry very
 different weight:
 
-  published   - scraped from the org's own privacy/legal page. Strongest claim:
+  published - scraped from the org's own privacy/legal page. Strongest claim:
                 they wrote this address down themselves.
   securitytxt - Contact: line in /.well-known/security.txt (RFC 9116).
-  inferred    - RFC 2142 role addresses (abuse@, security@) that the RFC says
+  inferred - RFC 2142 role addresses (abuse@, security@) that the RFC says
                 SHOULD exist but that the org never published. Weakest claim.
                 Never fold these into a "they published a dead address" figure.
 
@@ -153,7 +153,7 @@ def find_policy_urls(domain: str) -> list[str]:
 
 
 # Role words that appear inside spliced local-parts. Page text runs straight
-# into the address — "...serving department" + "data-privacy@" becomes
+# into the address - "...serving department" + "data-privacy@" becomes
 # departmentdata-privacy@, "New York 10013" + "privacy@" becomes
 # 10013privacy@. The domain is real, so the no-MX guard cannot catch these,
 # and a nonexistent address double-confirms as DEAD exactly as designed.
@@ -218,7 +218,7 @@ def _clean_local(addr: str) -> str | None:
 def extract_contacts(html: str, locals_wanted: tuple[str, ...]) -> set[str]:
     """Pull addresses whose local-part signals the wanted channel.
 
-    mailto: hrefs are read first and are authoritative — they survive inline
+    mailto: hrefs are read first and are authoritative - they survive inline
     markup that would corrupt the same address in the rendered text. Visible
     text is then scanned as a fallback for addresses written out but not linked.
 

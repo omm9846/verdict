@@ -1,7 +1,7 @@
 """Send the pitch drafts from your own mailbox, one at a time.
 
 Deliberately not an ESP. Transactional providers forbid unsolicited mail, and
-a domain four days old has no reputation to spend — so this speaks SMTP to
+a domain four days old has no reputation to spend - so this speaks SMTP to
 your own provider, which makes it ordinary 1:1 business mail rather than a
 campaign. Credentials come from the environment and are never written down.
 
@@ -69,14 +69,14 @@ def check_recipient(addr: str) -> tuple[bool, str]:
     v = r.get("verdict")
     detail = str(r.get("detail", ""))[:60]
     if v == "DEAD":
-        return False, f"DEAD — {detail}"
+        return False, f"DEAD - {detail}"
     if v == "CATCHALL":
         return True, "catch-all: accepted, but nobody may read it"
     if v == "UNKNOWN":
-        return True, f"unverifiable (server refused probe) — {detail}"
+        return True, f"unverifiable (server refused probe) - {detail}"
     if v == "RISKY":
-        return True, f"gateway — {detail}"
-    return True, f"live — {detail}"
+        return True, f"gateway - {detail}"
+    return True, f"live - {detail}"
 
 
 def build(draft: dict, sender: str) -> EmailMessage:
@@ -157,7 +157,7 @@ def main():
     if a.via == "resend" and not sender:
         sender = os.environ.get("SMTP_FROM", "Om Soni <hello@tryverdict.org>")
 
-    print(f"{'DRY RUN' if not a.send else 'SENDING'} — {len(drafts)} message(s)")
+    print(f"{'DRY RUN' if not a.send else 'SENDING'} - {len(drafts)} message(s)")
     route = "Resend API" if a.via == "resend" else f"{host}:{port}"
     print(f"from {sender} via {route}\n")
 

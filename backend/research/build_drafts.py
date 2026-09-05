@@ -2,7 +2,7 @@
 
 Pairs each pack's written note with a recipient we have actually verified as
 live on that company's own domain. A pack whose domain has no live address is
-reported rather than guessed at — sending a notice about dead mailboxes into a
+reported rather than guessed at - sending a notice about dead mailboxes into a
 dead mailbox helps nobody, and the whole story depends on being able to say
 every company was contacted.
 

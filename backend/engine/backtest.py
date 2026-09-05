@@ -70,7 +70,7 @@ def report(bounced: list[dict], sent_total: int | None) -> dict:
     unknowable = len(catchall) + len(gated) + len(unknown)
 
     print(f"""
-BACKTEST — {n} bounced addresses
+BACKTEST - {n} bounced addresses
 {'=' * 62}
 
   WOULD HAVE BEEN CAUGHT       {knowable:>4}   {100*knowable/n if n else 0:.0f}% of your bounces

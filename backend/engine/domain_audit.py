@@ -1,4 +1,4 @@
-"""Domain deliverability audit — DNS only.
+"""Domain deliverability audit - DNS only.
 
 Grades the records that decide whether a domain's mail is trusted, and whether
 anyone else can send as it. Every check here is a DNS lookup, so this runs on
@@ -67,7 +67,7 @@ def check_spf(domain: str) -> dict:
     if len(records) > 1:
         return {"id": "spf", "status": "fail", "label": "SPF",
                 "detail": f"{len(records)} SPF records published. More than one "
-                          f"is a permanent error — receivers treat it as no SPF "
+                          f"is a permanent error - receivers treat it as no SPF "
                           f"at all.",
                 "fix": "Merge every include into a single TXT record."}
 
@@ -89,7 +89,7 @@ def check_spf(domain: str) -> dict:
 
     if rec.rstrip().endswith("?all"):
         return {"id": "spf", "status": "warn", "label": "SPF",
-                "detail": "Ends in ?all (neutral) — effectively no policy.",
+                "detail": "Ends in ?all (neutral) - effectively no policy.",
                 "fix": "Use -all once you are sure every sender is listed.",
                 "record": rec}
 
@@ -121,7 +121,7 @@ def check_dmarc(domain: str) -> dict:
 
     if policy == "none":
         return {"id": "dmarc", "status": "warn", "label": "DMARC",
-                "detail": "Published, but p=none — monitoring only. Spoofed "
+                "detail": "Published, but p=none - monitoring only. Spoofed "
                           "mail is still delivered."
                           + ("" if has_rua else " No rua= address, so you are "
                              "not even receiving the reports."),
@@ -149,7 +149,7 @@ def check_dkim(domain: str) -> dict:
     return {"id": "dkim", "status": "warn", "label": "DKIM",
             "detail": "No DKIM key found on the selectors we know about. Either "
                       "mail is unsigned, or it uses a custom selector we cannot "
-                      "guess — selectors cannot be enumerated from outside.",
+                      "guess - selectors cannot be enumerated from outside.",
             "fix": "Enable DKIM with your mail provider and publish the record "
                    "they give you."}
 
@@ -175,7 +175,7 @@ def check_mta_sts(domain: str) -> dict:
     recs = [t for t in _txt(f"_mta-sts.{domain}") if "v=STSv1" in t]
     if recs:
         return {"id": "mta_sts", "status": "pass", "label": "MTA-STS",
-                "detail": "Published — inbound mail is required to use TLS."}
+                "detail": "Published - inbound mail is required to use TLS."}
     return {"id": "mta_sts", "status": "info", "label": "MTA-STS",
             "detail": "Not published. Optional, but it stops a downgrade "
                       "attack on mail sent to you.",

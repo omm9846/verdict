@@ -1,7 +1,7 @@
 """Survey SPF/DKIM/DMARC posture across a population of domains.
 
 Aggregate statistics only, no named victims. The finding is about how many
-domains are spoofable, not about which — that framing needs no notification
+domains are spoofable, not about which - that framing needs no notification
 period, accuses nobody, and is the honest form of a public-interest security
 story.
 
@@ -95,7 +95,7 @@ def report(path):
         return f"{100 * a / n:.1f}%" if n else "n/a"
 
     print(f"""
-DOMAIN AUTHENTICATION SURVEY — {path}
+DOMAIN AUTHENTICATION SURVEY - {path}
 {'=' * 68}
 Domains checked                     {len(rows)}
 ...that accept mail (the sample)    {n}
