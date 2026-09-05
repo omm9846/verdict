@@ -7,7 +7,29 @@ export const metadata: Metadata = {
   description: "Sign in to Verdict with a one-time link. No password to forget.",
 };
 
-export default function LoginPage() {
+const ERRORS: Record<string, string> = {
+  missing: "That link had no token in it. Ask for a new one.",
+  expired: "That link has expired or was already used. Ask for a new one.",
+  google_not_configured: "Google sign-in is not configured yet.",
+  google_denied: "Google sign-in was cancelled.",
+  state_missing: "The sign-in took too long and had to start over.",
+  state_mismatch: "That sign-in could not be verified. Please start again.",
+  google_exchange: "Google rejected the sign-in. This usually means the OAuth client is misconfigured.",
+  google_no_token: "Google did not return an identity token.",
+  google_unverified: "That Google account has no verified email address.",
+  google_wrong_audience: "That sign-in was issued for a different application.",
+  google_failed: "Google sign-in failed. Please try again.",
+  profile_failed: "We could not create your account. Please try again.",
+};
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+  const message = error ? (ERRORS[error] ?? "Sign-in failed. Please try again.") : null;
+
   return (
     <main className="min-h-screen">
       <nav className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
@@ -30,6 +52,16 @@ export default function LoginPage() {
           Enter your address and we send a link that signs you in. It works once
           and expires in fifteen minutes.
         </p>
+
+        {message && (
+          <div
+            className="mt-8 border-2 p-4 font-mono text-sm"
+            style={{ borderColor: "var(--color-stamp-dead)" }}
+          >
+            {message}
+            <div className="text-ink-faint text-xs mt-2">code: {error}</div>
+          </div>
+        )}
 
         <div className="mt-8">
           <LoginForm />

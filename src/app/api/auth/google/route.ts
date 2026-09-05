@@ -5,13 +5,17 @@ import { cookies } from "next/headers";
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://tryverdict.org";
 export const STATE_COOKIE = "verdict_oauth_state";
 
+// Must match Google exactly, and must be identical in the token
+// exchange. Deriving it from the request would vary by host.
+export const REDIRECT_URI = `${SITE}/api/auth/google/callback`;
+
 /** Start the Google flow.
  *
  *  The state value is random, stored in a short-lived httpOnly cookie, and
  *  compared on the way back. Without it, an attacker can hand someone a
  *  prepared callback URL and sign them into an account they do not own.
  */
-export async function GET(req: Request) {
+export async function GET() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) {
     return NextResponse.redirect(`${SITE}/login?error=google_not_configured`);
@@ -26,10 +30,9 @@ export async function GET(req: Request) {
     maxAge: 600,
   });
 
-  const origin = new URL(req.url).origin;
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: `${origin}/api/auth/google/callback`,
+    redirect_uri: REDIRECT_URI,
     response_type: "code",
     scope: "openid email",
     state,

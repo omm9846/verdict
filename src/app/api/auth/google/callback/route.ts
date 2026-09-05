@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { admin, setSession } from "@/lib/auth";
-import { STATE_COOKIE } from "../route";
+import { REDIRECT_URI, STATE_COOKIE } from "../route";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://tryverdict.org";
 
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: `${url.origin}/api/auth/google/callback`,
+        redirect_uri: REDIRECT_URI,
         grant_type: "authorization_code",
       }),
     });
