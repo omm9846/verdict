@@ -52,7 +52,8 @@ export default function CleanPage() {
           Some of your list was never going to arrive.
         </h1>
         <p className="mt-6 text-lg text-ink-soft max-w-2xl leading-relaxed">
-          Paste it in. We will tell you which addresses sit on domains that
+          Paste it in, or drop an export straight from Apollo, Hunter or Clay.
+          We will tell you which addresses sit on domains that
           accept no mail, which are one character away from a real inbox, and
           which sit on catch-all domains where no tool on earth can tell you
           anything. Takes a few seconds and nothing is stored.

@@ -83,7 +83,7 @@ export function ListCleaner() {
         <textarea
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
-          placeholder={"paste your list here\n\none@example.com\ntwo@example.com\n\nor paste a whole CSV, we pull the addresses out"}
+          placeholder={"paste your list here\n\none@example.com\ntwo@example.com\n\nor drop in an Apollo, Hunter or Clay export — we read any CSV"}
           rows={9}
           style={{
             width: "100%", fontFamily: "inherit", fontSize: 14,

@@ -163,7 +163,7 @@ export function VerifyPanel({
               value={raw}
               onChange={(e) => setRaw(e.target.value)}
               rows={7}
-              placeholder={"paste addresses, or a whole CSV\n\none@example.com\ntwo@example.com"}
+              placeholder={"paste addresses, or drop an Apollo / Hunter / Clay export\n\none@example.com\ntwo@example.com"}
               className="w-full font-mono text-sm px-4 py-3 border border-rule bg-paper text-ink outline-none focus:border-ink resize-y"
             />
             <div className="flex gap-3 items-center flex-wrap mt-3">
