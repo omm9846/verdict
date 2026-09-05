@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/spoofable`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/clean`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${base}/bounce`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/integrations/clay`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/privacy`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/terms`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/alternatives`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
