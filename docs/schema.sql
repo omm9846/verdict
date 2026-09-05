@@ -57,6 +57,34 @@ as $$
   do update set count = usage_daily.count + excluded.count;
 $$;
 
+-- --------------------------------------------------------- trial usage
+
+-- Anonymous allowance for the enrichment endpoint, so somebody evaluating the
+-- Clay column can see it work on a few rows before paying. Keyed by a peppered
+-- hash of the caller's IP: enough to meter, and the raw address is never
+-- stored, which keeps the promise the rest of the product makes.
+create table if not exists trial_usage (
+  ip_hash  text not null,
+  day      date not null,
+  count    integer not null default 0,
+  primary key (ip_hash, day)
+);
+
+-- Same atomic-increment reasoning as bump_usage: read-add-write in app code
+-- lets two parallel requests each read the same number and both write n+1.
+create or replace function bump_trial(
+  p_ip text,
+  p_day date,
+  p_amount integer
+) returns void
+language sql
+as $$
+  insert into trial_usage (ip_hash, day, count)
+  values (p_ip, p_day, p_amount)
+  on conflict (ip_hash, day)
+  do update set count = trial_usage.count + excluded.count;
+$$;
+
 -- ------------------------------------------------------------- api keys
 
 create table if not exists api_keys (
@@ -94,6 +122,7 @@ alter table profiles    enable row level security;
 alter table auth_tokens enable row level security;
 alter table usage_daily enable row level security;
 alter table api_keys    enable row level security;
+alter table trial_usage enable row level security;
 alter table customers   enable row level security;
 
 -- Deliberately no policies. The service role bypasses RLS; anything else is

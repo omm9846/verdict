@@ -2,10 +2,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Verify emails inside Clay — free HTTP enrichment | Verdict",
+  title: "Verify emails inside Clay — HTTP API enrichment | Verdict",
   description:
     "Add Verdict as an HTTP API enrichment in Clay and check every address in "
-    + "your table before it reaches a sequence. No key, no signup, free.",
+    + "your table before it reaches a sequence. 25 a day free with no signup, "
+    + "an API key for volume.",
   keywords: [
     "clay email verification",
     "clay http api enrichment",
@@ -49,7 +50,7 @@ export default function ClayPage() {
       <div className="bg-ink text-paper font-mono text-[11px] tracking-[0.18em] uppercase">
         <div className="max-w-6xl mx-auto px-6 py-1.5 flex justify-between">
           <span>integration</span>
-          <span className="hidden sm:inline">no key required</span>
+          <span className="hidden sm:inline">25 a day, no key</span>
           <span>open source · MIT</span>
         </div>
       </div>
@@ -74,8 +75,8 @@ export default function ClayPage() {
         <p className="mt-6 text-lg text-ink-soft leading-relaxed">
           Your waterfall finds addresses. This tells you which of them can
           actually receive mail, before a single one reaches a sequence. It is
-          an HTTP API enrichment, so there is nothing to install and no key to
-          request.
+          an HTTP API enrichment, so there is nothing to install, and the
+          first 25 rows a day need no key at all.
         </p>
 
         <div className="mt-10 border-2 border-ink bg-card">
@@ -96,8 +97,9 @@ export default function ClayPage() {
 https://tryverdict.org/api/enrich
               </pre>
               <p>
-                No authentication headers. The endpoint is open so you can see
-                whether it is useful before anyone asks you for anything.
+                Leave the headers empty for now. You get 25 enrichments a day
+                without a key, which is enough to map the columns and run it
+                down a test list before deciding anything.
               </p>
             </Step>
 
@@ -120,6 +122,27 @@ https://tryverdict.org/api/enrich
               <p>
                 Run it on one row first. Clay will show the response, and every
                 field below is top-level, so each one maps straight to a column.
+              </p>
+            </Step>
+
+            <Step n="5" title="Add your key before you run the table">
+              <p>
+                Past 25 rows a day the endpoint answers{" "}
+                <code className="font-mono text-sm">429</code> instead of a
+                verdict, which in Clay looks like an enrichment that silently
+                stopped working. Add the header before you run a real table:
+              </p>
+              <pre className="bg-paper-deep border border-rule p-4 font-mono text-sm overflow-x-auto">
+{`Authorization: Bearer vk_your_key_here`}
+              </pre>
+              <p className="text-sm">
+                Keys live in your{" "}
+                <Link href="/dashboard" className="border-b border-ink-faint">
+                  dashboard
+                </Link>
+                . The response carries{" "}
+                <code className="font-mono text-sm">remaining_today</code> so
+                you can see what is left without guessing.
               </p>
             </Step>
           </div>
@@ -187,6 +210,38 @@ python -m engine verify someone@example.com`}
         </div>
 
         <h2 className="font-display font-black text-2xl mt-14 mb-4">
+          Running it on a real table
+        </h2>
+        <p className="text-ink-soft leading-relaxed">
+          25 rows a day free, no signup, so you can decide whether the data is
+          worth anything before you pay for it. Above that a key is{" "}
+          <strong>$59 a month for 5,000 enrichments a day</strong>, which is
+          more than most Clay tables will ever ask for.
+        </p>
+        <p className="text-ink-soft leading-relaxed mt-4">
+          Worth being plain about what that money is doing: it pays for a
+          machine with outbound port 25, which is the only way anyone can
+          confirm an individual mailbox. Until that machine exists this
+          endpoint is DNS tier for everybody, subscribers included, and it says
+          so in every response. When it does exist, the same key starts
+          returning real SMTP results at no extra cost.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/#pricing"
+            className="font-mono text-sm border-2 border-ink px-5 py-2.5 hover:bg-ink hover:text-paper transition-colors"
+          >
+            see the plan
+          </Link>
+          <Link
+            href="/dashboard"
+            className="font-mono text-sm border-2 border-rule px-5 py-2.5 hover:border-ink transition-colors"
+          >
+            get a key
+          </Link>
+        </div>
+
+        <h2 className="font-display font-black text-2xl mt-14 mb-4">
           Works the same anywhere
         </h2>
         <p className="text-ink-soft leading-relaxed">
@@ -197,6 +252,7 @@ python -m engine verify someone@example.com`}
         <pre className="mt-5 bg-paper-deep border border-rule p-4 font-mono text-xs overflow-x-auto">
 {`curl -X POST https://tryverdict.org/api/enrich \\
   -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer vk_your_key_here" \\
   -d '{"email":"someone@example.com"}'`}
         </pre>
 

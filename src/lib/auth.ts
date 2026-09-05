@@ -227,6 +227,74 @@ export async function usageToday(profile: Profile): Promise<number> {
   return data?.count ?? 0;
 }
 
+/* --------------------------------------------------------------- trial */
+
+/** Anonymous calls allowed per IP per day on the enrichment endpoint.
+ *
+ *  Small on purpose. Enough to map the column, run it down a test list and
+ *  see real answers; not enough to enrich a working list for free. An API
+ *  nobody can try does not get adopted, and one anybody can use forever does
+ *  not get paid for. */
+export const TRIAL_PER_DAY = 25;
+
+/** A stable, non-reversible identifier for an anonymous caller.
+ *
+ *  Peppered with SESSION_SECRET so the stored value is useless on its own and
+ *  cannot be matched back to an address by anyone reading the table. */
+export function clientIpHash(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for") ?? "";
+  const ip =
+    fwd.split(",")[0].trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  return sha256(`trial:${ip}:${process.env.SESSION_SECRET ?? ""}`).slice(0, 40);
+}
+
+/** Same count-then-increment shape as consumeQuota, and it fails closed for
+ *  the same reason: a free allowance that cannot be metered is not free, it
+ *  is unlimited. */
+export async function consumeTrial(
+  ipHash: string,
+  amount = 1
+): Promise<{ ok: boolean; used: number; limit: number; metered: boolean }> {
+  const limit = TRIAL_PER_DAY;
+  const day = today();
+
+  try {
+    const db = admin();
+    const { data } = await db
+      .from("trial_usage")
+      .select("count")
+      .eq("ip_hash", ipHash)
+      .eq("day", day)
+      .single();
+
+    const used = data?.count ?? 0;
+    if (used + amount > limit) {
+      return { ok: false, used, limit, metered: true };
+    }
+
+    const { error } = await db.rpc("bump_trial", {
+      p_ip: ipHash,
+      p_day: day,
+      p_amount: amount,
+    });
+    if (error) throw new Error(error.message);
+
+    return { ok: true, used: used + amount, limit, metered: true };
+  } catch (e) {
+    // The counter is unreachable: the table is not migrated yet, or the
+    // database is down. Unlike the paid quota this fails OPEN, because the
+    // two failures are not symmetrical. Refusing here tells a stranger
+    // evaluating the product that they used up an allowance they never
+    // touched, and loses them permanently; allowing it gives away a handful
+    // of DNS lookups. The paid tier is metered separately and still fails
+    // closed, so nothing billable leaks through this path.
+    console.error("trial metering unavailable:", (e as Error)?.message ?? e);
+    return { ok: true, used: 0, limit, metered: false };
+  }
+}
+
 /* ------------------------------------------------------------- api keys */
 
 export function newApiKey(): { key: string; hash: string } {
@@ -243,6 +311,14 @@ export async function profileForApiKey(key: string): Promise<Profile | null> {
     .eq("key_hash", sha256(key))
     .single();
   if (!data || data.revoked_at) return null;
+
+  // Best effort: a key that works must not fail because we could not write a
+  // timestamp, so this is deliberately not awaited for correctness.
+  void admin()
+    .from("api_keys")
+    .update({ last_used_at: new Date().toISOString() })
+    .eq("key_hash", sha256(key))
+    .then(undefined, () => {});
 
   const { data: profile } = await admin()
     .from("profiles")
