@@ -22,7 +22,7 @@ function rateLimited(ip: string): boolean {
 
 type Check = {
   id: string;
-  status: "pass" | "warn" | "fail" | "info";
+  status: "pass" | "warn" | "fail" | "info" | "unknown";
   label: string;
   detail: string;
   fix?: string;
@@ -125,7 +125,8 @@ function renderReport(audit: Audit): string {
     const mark =
       c.status === "pass" ? "PASS" :
       c.status === "warn" ? "WEAK" :
-      c.status === "fail" ? "FAIL" : "INFO";
+      c.status === "fail" ? "FAIL" :
+      c.status === "unknown" ? "SKIP" : "INFO";
     lines.push(`[${mark}]  ${c.label}`);
     lines.push(`  ${c.detail}`);
     if (c.fix && c.status !== "pass") lines.push(`  Fix: ${c.fix}`);

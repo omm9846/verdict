@@ -7,7 +7,7 @@ const API = process.env.NEXT_PUBLIC_ENGINE_URL || "https://verdict-engine-4g97.o
 
 type Check = {
   id: string;
-  status: "pass" | "warn" | "fail" | "info";
+  status: "pass" | "warn" | "fail" | "info" | "unknown";
   label: string;
   detail: string;
   fix?: string;
@@ -75,6 +75,9 @@ const STATUS: Record<string, { color: string; mark: string; word: string }> = {
   warn: { color: "var(--color-stamp-risky)", mark: "!", word: "WEAK" },
   fail: { color: "var(--color-stamp-dead)", mark: "✕", word: "FAIL" },
   info: { color: "var(--color-ink-faint)", mark: "–", word: "INFO" },
+  // A check whose DNS lookup did not answer. Deliberately not styled as
+  // a failure: we did not look, so we are not claiming anything.
+  unknown: { color: "var(--color-ink-faint)", mark: "?", word: "UNCHECKED" },
 };
 
 export default async function DomainAuditPage(

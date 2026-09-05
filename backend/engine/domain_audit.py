@@ -18,6 +18,7 @@ is the point: the audit is the reason someone gives us an address.
 from __future__ import annotations
 
 import re
+import time
 
 import dns.resolver
 
@@ -33,29 +34,70 @@ DKIM_SELECTORS = (
 )
 
 
-def _txt(name: str) -> list[str]:
-    try:
-        answers = dns.resolver.resolve(name, "TXT", lifetime=6)
-        return [b"".join(r.strings).decode("utf-8", "ignore") for r in answers]
-    except Exception:
-        return []
+def _resolver() -> dns.resolver.Resolver:
+    """Same hardened resolver verify.py uses.
+
+    The stock resolver inherits whatever the host puts in resolv.conf, which on
+    a cloud box is often a single flaky forwarder.
+    """
+    r = dns.resolver.Resolver()
+    r.lifetime = 3.0
+    r.timeout = 3.0
+    r.nameservers = ["8.8.8.8", "1.1.1.1"]
+    return r
 
 
-def _cname_or_txt(name: str) -> str | None:
+def _txt(name: str, attempts: int = 3) -> tuple[list[str], str]:
+    """Returns (records, status) where status is ok | none | dnsfail.
+
+    The tri-state is the whole point. This used to swallow every exception and
+    return [], which made "the lookup timed out" indistinguishable from "this
+    domain publishes no SPF record" - so a blip told a healthy domain it was
+    wide open to spoofing. Same bug class as collapsing a DNS timeout into a
+    dead mailbox, and it must never be reintroduced.
+    """
+    for i in range(attempts):
+        try:
+            answers = _resolver().resolve(name, "TXT")
+            recs = [b"".join(r.strings).decode("utf-8", "ignore")
+                    for r in answers]
+            return recs, ("ok" if recs else "none")
+        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+            # Authoritative: the name genuinely has no TXT records.
+            return [], "none"
+        except Exception:
+            if i < attempts - 1:
+                time.sleep(0.4 * (i + 1))
+    return [], "dnsfail"
+
+
+def _cname_or_txt(name: str) -> tuple[str | None, str]:
+    """Returns (value, status). status is dnsfail only when nothing answered."""
+    saw_failure = False
     for rtype in ("CNAME", "TXT"):
         try:
-            answers = dns.resolver.resolve(name, rtype, lifetime=5)
+            answers = _resolver().resolve(name, rtype)
             for r in answers:
                 if rtype == "CNAME":
-                    return str(r.target).rstrip(".")
-                return b"".join(r.strings).decode("utf-8", "ignore")[:120]
-        except Exception:
+                    return str(r.target).rstrip("."), "ok"
+                return b"".join(r.strings).decode("utf-8", "ignore")[:120], "ok"
+        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
             continue
-    return None
+        except Exception:
+            saw_failure = True
+            continue
+    return None, ("dnsfail" if saw_failure else "none")
+
+
+UNKNOWN_DNS = "DNS did not answer, so this was not checked."
 
 
 def check_spf(domain: str) -> dict:
-    records = [t for t in _txt(domain) if t.lower().startswith("v=spf1")]
+    all_txt, status = _txt(domain)
+    if status == "dnsfail":
+        return {"id": "spf", "status": "unknown", "label": "SPF",
+                "detail": UNKNOWN_DNS}
+    records = [t for t in all_txt if t.lower().startswith("v=spf1")]
 
     if not records:
         return {"id": "spf", "status": "fail", "label": "SPF",
@@ -104,8 +146,11 @@ def check_spf(domain: str) -> dict:
 
 
 def check_dmarc(domain: str) -> dict:
-    records = [t for t in _txt(f"_dmarc.{domain}")
-               if t.lower().startswith("v=dmarc1")]
+    all_txt, status = _txt(f"_dmarc.{domain}")
+    if status == "dnsfail":
+        return {"id": "dmarc", "status": "unknown", "label": "DMARC",
+                "detail": UNKNOWN_DNS}
+    records = [t for t in all_txt if t.lower().startswith("v=dmarc1")]
     if not records:
         return {"id": "dmarc", "status": "fail", "label": "DMARC",
                 "detail": "No DMARC record. Anyone can send mail claiming to "
@@ -134,13 +179,21 @@ def check_dmarc(domain: str) -> dict:
 
 
 def check_dkim(domain: str) -> dict:
-    found = []
+    found, failures = [], 0
     for sel in DKIM_SELECTORS:
-        val = _cname_or_txt(f"{sel}._domainkey.{domain}")
+        val, status = _cname_or_txt(f"{sel}._domainkey.{domain}")
         if val:
             found.append(sel)
+        elif status == "dnsfail":
+            failures += 1
         if len(found) >= 3:
             break
+
+    # Nothing found and the resolver was unhappy throughout: we did not look,
+    # so we cannot say the domain is unsigned.
+    if not found and failures > len(DKIM_SELECTORS) // 2:
+        return {"id": "dkim", "status": "unknown", "label": "DKIM",
+                "detail": UNKNOWN_DNS}
 
     if found:
         return {"id": "dkim", "status": "pass", "label": "DKIM",
@@ -157,8 +210,8 @@ def check_dkim(domain: str) -> dict:
 def check_mx(domain: str) -> dict:
     mx, status = resolve_mx(domain)
     if status == "dnsfail":
-        return {"id": "mx", "status": "warn", "label": "MX",
-                "detail": "DNS did not answer, so we cannot say."}
+        return {"id": "mx", "status": "unknown", "label": "MX",
+                "detail": UNKNOWN_DNS}
     if not mx:
         return {"id": "mx", "status": "fail", "label": "MX",
                 "detail": "No mail server. This domain cannot receive email.",
@@ -172,7 +225,11 @@ def check_mx(domain: str) -> dict:
 
 
 def check_mta_sts(domain: str) -> dict:
-    recs = [t for t in _txt(f"_mta-sts.{domain}") if "v=STSv1" in t]
+    all_txt, status = _txt(f"_mta-sts.{domain}")
+    if status == "dnsfail":
+        return {"id": "mta_sts", "status": "info", "label": "MTA-STS",
+                "detail": UNKNOWN_DNS}
+    recs = [t for t in all_txt if "v=STSv1" in t]
     if recs:
         return {"id": "mta_sts", "status": "pass", "label": "MTA-STS",
                 "detail": "Published - inbound mail is required to use TLS."}
@@ -185,6 +242,10 @@ def check_mta_sts(domain: str) -> dict:
 # Only checks that reflect real risk carry weight. MTA-STS is informational
 # and deliberately scores nothing.
 WEIGHTS = {"dmarc": 35, "spf": 30, "dkim": 20, "mx": 15}
+# 'unknown' is absent on purpose: an unchecked record is dropped from the
+# score entirely rather than scored zero, and the rest is rescaled. Grading a
+# domain F because our resolver was having a bad minute is worse than useless,
+# because the person reading it will go and change DNS records that were fine.
 POINTS = {"pass": 1.0, "warn": 0.5, "info": 1.0, "fail": 0.0}
 
 
@@ -200,8 +261,17 @@ def audit_domain(domain: str) -> dict:
     checks = [check_mx(domain), check_spf(domain), check_dmarc(domain),
               check_dkim(domain), check_mta_sts(domain)]
 
-    score = sum(WEIGHTS.get(c["id"], 0) * POINTS[c["status"]] for c in checks)
-    score = round(score)
+    graded = [c for c in checks
+              if c["id"] in WEIGHTS and c["status"] != "unknown"]
+    unchecked = [c["label"] for c in checks if c["status"] == "unknown"]
+    weight = sum(WEIGHTS[c["id"]] for c in graded)
+
+    if not weight:
+        return {"domain": domain,
+                "error": "DNS did not answer for that domain. Try again."}
+
+    earned = sum(WEIGHTS[c["id"]] * POINTS[c["status"]] for c in graded)
+    score = round(100 * earned / weight)
     grade = ("A" if score >= 90 else "B" if score >= 75 else
              "C" if score >= 60 else "D" if score >= 40 else "F")
 
@@ -213,5 +283,10 @@ def audit_domain(domain: str) -> dict:
     else:
         headline = "Properly configured. Nothing urgent to fix."
 
+    if unchecked:
+        headline += (f" ({', '.join(unchecked)} could not be checked just now, "
+                     f"so the score covers the rest.)")
+
     return {"domain": domain, "score": score, "grade": grade,
-            "headline": headline, "checks": checks}
+            "headline": headline, "checks": checks,
+            "partial": bool(unchecked), "unchecked": unchecked}
