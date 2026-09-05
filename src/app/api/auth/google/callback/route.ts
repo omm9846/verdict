@@ -101,5 +101,5 @@ export async function GET(req: Request) {
 
   if (!profileId) return fail("profile_failed");
   await setSession(profileId);
-  return NextResponse.redirect(`${SITE}/account`);
+  return NextResponse.redirect(`${SITE}/dashboard`);
 }

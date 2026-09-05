@@ -17,5 +17,5 @@ export async function GET(req: Request) {
   }
 
   await setSession(profile.id);
-  return NextResponse.redirect(`${SITE}/account`);
+  return NextResponse.redirect(`${SITE}/dashboard`);
 }
