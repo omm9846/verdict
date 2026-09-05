@@ -89,6 +89,17 @@ export default async function DomainAuditPage(
   const audit = await getAudit(domain);
   const failing = audit?.checks?.filter((c) => c.status === "fail" || c.status === "warn") ?? [];
 
+  // The badge is a claim about the sender, so only a clean domain gets to make
+  // it. B and above earn a green mark worth displaying; anything lower gets the
+  // nudge to fix first, which is the whole conversion mechanic - the seal is
+  // earned by fixing DNS, never by asking.
+  const earned = !!audit?.grade && (audit.grade === "A" || audit.grade === "B");
+  const SITE = "https://tryverdict.org";
+  const badgeUrl = `${SITE}/badge/${domain}.svg`;
+  const auditUrl = `${SITE}/audit/${domain}`;
+  const embedHtml = `<a href="${auditUrl}"><img src="${badgeUrl}" alt="Email hygiene grade for ${domain} - verified by Verdict" height="20"></a>`;
+  const signatureLine = `Verified clean sender · ${SITE.replace("https://", "")}/audit/${domain}`;
+
   return (
     <main className="min-h-screen">
       <div className="bg-ink text-paper font-mono text-[11px] tracking-[0.18em] uppercase">
@@ -177,6 +188,68 @@ export default async function DomainAuditPage(
                 a DNS record — no software to install.
               </p>
             )}
+
+            {/* The distribution unit. A clean domain gets a live badge and a
+                plain-text credential; every place it appears is a link back
+                here, and the badge re-checks itself so it cannot be faked. */}
+            <div className="mt-12 border-2 border-ink bg-card p-7">
+              {earned ? (
+                <>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <h2 className="font-display font-black text-2xl">
+                      {domain} is a clean sender. Show it.
+                    </h2>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={badgeUrl} alt={`Email hygiene grade for ${domain}`} height={20} />
+                  </div>
+                  <p className="mt-3 text-ink-soft leading-relaxed max-w-2xl">
+                    In a market full of senders nobody can vouch for, an
+                    independent grade is a reason to reply. The badge re-checks
+                    weekly against public DNS, so it stays honest on its own —
+                    which is why it means something a self-declared one never
+                    could. It goes yellow if your setup slips.
+                  </p>
+
+                  <h3 className="mt-7 font-mono text-xs tracking-[0.15em] uppercase text-ink-faint">
+                    On your site
+                  </h3>
+                  <pre className="mt-2 bg-paper-deep border border-rule p-4 font-mono text-xs overflow-x-auto whitespace-pre-wrap break-all">
+{embedHtml}
+                  </pre>
+
+                  <h3 className="mt-6 font-mono text-xs tracking-[0.15em] uppercase text-ink-faint">
+                    In your email signature <span className="normal-case tracking-normal">(plain text — safe for cold outreach)</span>
+                  </h3>
+                  <pre className="mt-2 bg-paper-deep border border-rule p-4 font-mono text-xs overflow-x-auto whitespace-pre-wrap break-all">
+{`✓ ${signatureLine}`}
+                  </pre>
+                  <p className="mt-2 text-ink-faint text-xs leading-relaxed max-w-2xl">
+                    Text, not an image, on purpose: images and extra links in a
+                    cold email hurt the deliverability this is certifying. One
+                    line, one link, no pixel.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="font-display font-black text-2xl">
+                    Earn a clean-sender grade you can display
+                  </h2>
+                  <p className="mt-3 text-ink-soft leading-relaxed max-w-2xl">
+                    Fix the {failing.length || "open"} item{failing.length === 1 ? "" : "s"} above
+                    and {domain} earns a live badge — an independent mark that
+                    tells the people you email your domain is not one that can be
+                    forged. It links back to this page, re-checks itself, and
+                    cannot be faked, which is why a recipient has a reason to
+                    trust it.
+                  </p>
+                  <p className="mt-4 font-mono text-sm">
+                    <Link href="/" className="border-b border-ink hover:text-stamp-live transition-colors">
+                      keep it clean automatically →
+                    </Link>
+                  </p>
+                </>
+              )}
+            </div>
           </>
         ) : (
           <>
