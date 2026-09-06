@@ -238,6 +238,72 @@ TEMPLATES = {
                 "https://tryverdict.org/spoofable\n\n"
                 "Public DNS only. Nothing was sent to anyone."),
     },
+    "private": {
+        "person": {
+            "subjects": ("the verifier that never sees your client lists",
+                         "verifying {domain}'s lists without uploading them",
+                         "your clients' lists, and where they get uploaded"),
+            "openers": (
+                "You run outreach for clients, so their contact lists are your "
+                "responsibility - and every email verifier on the market makes "
+                "you upload that list to their servers before it will check a "
+                "thing. That is the part I could not get comfortable with, so "
+                "I built the other kind.",
+                "Every verifier you can buy wants your list uploaded to their "
+                "cloud first. For an agency holding clients' contacts that is "
+                "a promise you make on someone else's behalf. I built one that "
+                "does not ask.",
+                "Quick one about the lists you clean for clients: the tools "
+                "that check them all take a copy first. I built one that never "
+                "sees the list at all, and thought you would be the right "
+                "person to tell.",
+            ),
+        },
+        "role": {
+            "subjects": ("for whoever owns client data at {domain}",
+                         "list verification that never leaves your servers",
+                         "please pass to whoever cleans client lists"),
+            "openers": (
+                "Writing to the shared inbox because I could not find a named "
+                "contact. Please pass this to whoever cleans client lists "
+                "before a send.",
+                "No named contact published, so this is going to the general "
+                "address. It is for whoever is responsible for client contact "
+                "data.",
+                "For whoever owns deliverability and the client lists that "
+                "feed it - apologies for the shared inbox.",
+            ),
+        },
+        "pitch": {
+            "person": (
+                "Verdict is the one verifier that never sees the list. It is "
+                "open source and runs on your own machine, so a client's "
+                "contacts never leave it - the thing a DPA is supposed to "
+                "promise and a cloud uploader structurally cannot. And it "
+                "tells you which addresses it genuinely cannot confirm instead "
+                "of labelling them 'valid' to pad a number, so you stop "
+                "trusting a green tick that was really a guess."
+            ),
+            "role": (
+                "Verdict is open source and runs on your own machine, so the "
+                "list it checks never leaves your servers - no upload, nothing "
+                "for a client to worry about in a DPA. And it is honest about "
+                "the addresses it cannot confirm rather than calling them "
+                "'valid' to look good, which is what quietly lands a "
+                "clean-looking list in the spam folder anyway."
+            ),
+        },
+        "evidence": (
+            "On my own outreach it caught 24 dead addresses across 72 "
+            "contacts, and the list never left my laptop.",
+            "Across 72 of my own contacts it stopped 24 that would have "
+            "bounced, without a single address being uploaded anywhere.",
+            "It held back 24 of 72 addresses on my own list, all checked "
+            "locally, nothing sent to a third party.",
+        ),
+        "cta": ("MIT-licensed, runs locally, nothing uploaded:\n"
+                "https://tryverdict.org/clean"),
+    },
 }
 
 

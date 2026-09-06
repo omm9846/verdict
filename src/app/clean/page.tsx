@@ -59,6 +59,16 @@ export default function CleanPage() {
           anything. Takes a few seconds and nothing is stored.
         </p>
 
+        <p className="mt-5 font-mono text-sm border-l-2 border-ink pl-4 max-w-2xl leading-relaxed">
+          <strong>The only verifier that can run without ever seeing your list.</strong>{" "}
+          The engine is open source and runs on your own machine — nothing
+          uploaded, nothing to trust us with.
+          <span className="text-ink-faint">
+            {" "}The box below is a fast DNS-tier pass; the full private gate
+            runs locally, shown just below.
+          </span>
+        </p>
+
         <div className="mt-10">
           <ListCleaner />
         </div>
