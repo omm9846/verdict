@@ -307,15 +307,28 @@ TEMPLATES = {
 }
 
 
-def compose(domain: str, addr: str, template: str, pack: dict) -> dict:
-    """Build one message for one recipient. No two come out the same."""
+def compose(domain: str, addr: str, template: str, pack: dict,
+            display_name: str | None = None) -> dict:
+    """Build one message for one recipient. No two come out the same.
+
+    display_name is set when the recipient is a known, verified person (a
+    founder found and confirmed by name), so the greeting uses their real first
+    name rather than one guessed from the local part, and the message is always
+    the person variant.
+    """
     tpl = TEMPLATES[template]
-    kind = "role" if is_role(addr) else "person"
+    if display_name:
+        kind = "person"
+    else:
+        kind = "role" if is_role(addr) else "person"
     side = tpl[kind]
 
     subject = variant(domain + "s", side["subjects"]).format(domain=domain)
     opener = variant(domain + "o", side["openers"])
-    name = first_name(addr) if kind == "person" else ""
+    if display_name:
+        name = display_name.split()[0]
+    else:
+        name = first_name(addr) if kind == "person" else ""
     greeting = f"Hi {name}," if name else "Hi,"
 
     fact, finding = observed_fact(domain, pack)
@@ -349,14 +362,29 @@ def save_ledger(ledger: dict) -> None:
 
 
 def pick_address(pack: dict) -> str | None:
-    """A named person beats a shared inbox, always.
+    """A named person beats a shared inbox, always - then honesty about port 25.
 
-    The old order had this backwards: it preferred hello@ and support@, so
-    every message went to a desk and every message still claimed the address
-    had been worked out. Both wrong at once.
+    When a live SMTP probe is possible, a confirmed SEND is preferred and a
+    named person beats a desk. But on a host without outbound port 25 nothing
+    ever returns SEND, and the old code then picked nobody, so the whole
+    campaign silently sent zero mail. That is not more honest, it is just
+    broken: it refuses to send to hello@ on a live agency domain, which is the
+    one address that effectively never bounces.
+
+    So the fallback, used only when no probe could be made, is a known-good
+    shared inbox that the DNS tier did not mark dead. This matches how mail has
+    always gone out here without port 25, and the send loop still runs a final
+    check that stops a DEAD address regardless.
     """
-    live = [a["email"] for a in pack.get("addresses", [])
-            if a.get("verdict") == "SEND"]
+    addrs = pack.get("addresses", [])
+
+    def dead(a: dict) -> bool:
+        return a.get("verdict") in ("DEAD", "CATCHALL", "EXTRACTION_SUSPECT") \
+            or a.get("confirmed_dead")
+
+    # 1. A real probe got through. Prefer a confirmed live named person, then a
+    #    confirmed live desk.
+    live = [a["email"] for a in addrs if a.get("verdict") == "SEND"]
     people = [a for a in live if not is_role(a)]
     if people:
         return people[0]
@@ -364,12 +392,26 @@ def pick_address(pack: dict) -> str | None:
         for addr in live:
             if addr.split("@")[0] == want:
                 return addr
-    return live[0] if live else None
+    if live:
+        return live[0]
+
+    # 2. No probe was possible. Fall back to a preferred shared inbox that the
+    #    DNS tier did not rule out. Restricted to PREFERRED_LOCALS so we only
+    #    ever guess an address that is safe to assume on an established domain.
+    safe = {a["email"].lower() for a in addrs if not dead(a)}
+    for want in PREFERRED_LOCALS:
+        cand = f"{want}@{pack['domain']}".lower()
+        if cand in safe:
+            return cand
+    return None
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--targets", required=True)
+    ap.add_argument("--targets", help="domains file, crawled for a contact")
+    ap.add_argument("--from-list", dest="from_list",
+                    help="CSV of domain,email,name (already-verified named "
+                         "contacts, e.g. from find_founders). Skips the crawl.")
     ap.add_argument("--campaign", required=True,
                     help="name recorded in the ledger, e.g. agencies-oct")
     ap.add_argument("--template", default="clean", choices=sorted(TEMPLATES))
@@ -382,45 +424,66 @@ def main() -> int:
     ap.add_argument("--send", action="store_true",
                     help="actually send. Without it this is a dry run.")
     a = ap.parse_args()
+    if not a.targets and not a.from_list:
+        ap.error("one of --targets or --from-list is required")
 
     ledger = load_ledger()
     already = ledger.get("sent", {})
 
-    with open(a.targets, encoding="utf-8") as fh:
-        targets = [norm_domain(l) for l in fh
-                   if l.strip() and not l.startswith("#")]
-
-    fresh = [d for d in dict.fromkeys(targets) if d not in already]
-    log(f"{len(targets)} targets, {len(targets) - len(fresh)} already contacted, "
-        f"{len(fresh)} new")
-    if not fresh:
-        print("Nothing new to contact.")
-        return 0
-
-    # Verify more than we need, since roughly one in six yields a live address.
-    budget = min(len(fresh), max(a.limit * 8, a.limit))
-    log(f"verifying contacts for {budget} domains...")
-
     ready: list[tuple[str, dict]] = []
-    for domain in fresh[:budget]:
-        if len(ready) >= a.limit:
-            break
-        try:
-            pack = audit_outlet(domain)
-        except Exception as e:
-            log(f"  {domain}: {str(e)[:60]}")
-            continue
-        if pack.get("catchall"):
-            log(f"  {domain:<28} catch-all, skipped")
-            continue
-        addr = pick_address(pack)
-        if addr:
-            draft = compose(domain, addr, a.template, pack)
-            if a.template == "spoofable" and not draft["finding"]:
-                log(f"  {domain:<28} DNS already correct, no hook, skipped")
+
+    if a.from_list:
+        # Contacts already found and verified elsewhere. Just compose and send,
+        # greeting each by the real name, with the ledger doing its usual job of
+        # never mailing a domain twice.
+        import csv
+        rows = []
+        with open(a.from_list, encoding="utf-8", newline="") as fh:
+            for row in csv.DictReader(fh):
+                dom = norm_domain(row.get("domain", ""))
+                email = (row.get("email") or "").strip().lower()
+                if dom and email and dom not in already:
+                    rows.append((dom, email, (row.get("name") or "").strip()))
+        log(f"{len(rows)} verified contacts not yet in the ledger")
+        for dom, email, name in rows[:a.limit]:
+            draft = compose(dom, email, a.template, {"notes": []}, display_name=name)
+            ready.append((dom, draft))
+            log(f"  {dom:<28} {email:<34} [{name or 'named'}]")
+    else:
+        with open(a.targets, encoding="utf-8") as fh:
+            targets = [norm_domain(l) for l in fh
+                       if l.strip() and not l.startswith("#")]
+
+        fresh = [d for d in dict.fromkeys(targets) if d not in already]
+        log(f"{len(targets)} targets, {len(targets) - len(fresh)} already "
+            f"contacted, {len(fresh)} new")
+        if not fresh:
+            print("Nothing new to contact.")
+            return 0
+
+        # Verify more than we need, since ~one in six yields a live address.
+        budget = min(len(fresh), max(a.limit * 8, a.limit))
+        log(f"verifying contacts for {budget} domains...")
+
+        for domain in fresh[:budget]:
+            if len(ready) >= a.limit:
+                break
+            try:
+                pack = audit_outlet(domain)
+            except Exception as e:
+                log(f"  {domain}: {str(e)[:60]}")
                 continue
-            ready.append((domain, draft))
-            log(f"  {domain:<28} {addr:<34} [{draft['kind']}]")
+            if pack.get("catchall"):
+                log(f"  {domain:<28} catch-all, skipped")
+                continue
+            addr = pick_address(pack)
+            if addr:
+                draft = compose(domain, addr, a.template, pack)
+                if a.template == "spoofable" and not draft["finding"]:
+                    log(f"  {domain:<28} DNS already correct, no hook, skipped")
+                    continue
+                ready.append((domain, draft))
+                log(f"  {domain:<28} {addr:<34} [{draft['kind']}]")
 
     if not ready:
         print("No verified live contacts found in this batch.")
